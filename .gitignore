@@ -23,6 +23,9 @@ htmlcov/
 .agents/
 skills-lock.json
 
+# --- Assets adjuntos de fixtures (solo el .html sirve para scraping) ---
+tests/fixtures/*_files/
+
 # --- Sistema operativo ---
 Thumbs.db
 .DS_Store
