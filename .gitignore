@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# --- Herramientas de calidad ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# --- Entornos y secretos (NUNCA commitear) ---
+.env
+.env.*
+*.local
+
+# --- Recursos internos del entorno del agente (no son parte del proyecto) ---
+.agents/
+skills-lock.json
+
+# --- Sistema operativo ---
+Thumbs.db
+.DS_Store
+
+# NOTA: el contenido de data/ y tests/fixtures/ SÍ se commitea a propósito:
+# data/state.json es el estado persistente del bot (ver docs/PLAN.md decisión D3).
+# No agregar reglas que los ignoren.
