@@ -94,3 +94,30 @@
 
 **Estado al cierre:** Etapa 2 completada ✅ — 22 tests verde, ruff limpio
 
+------------------------------------------------------------
+
+## 2026-11-10 | ETAPA 3 — Motor de deteccion + Persistencia (TDD) + colector navegador
+**Agente:** opencode GLM-5.3-Flash-Free (build, sesion continua)
+
+**Que se hizo:**
+- TDD de `detection.py`: `clasificar()` (keywords sobre texto normalizado), `decidir()` (siembra/sin_cambios/apertura/cierre/cambio), `decidir_fallo()` (R3: ignore 1er fallo, alerta en el 2do)
+- TDD de `state.py`: `Snapshot` frozen + JSON round-trip + tolerancia a archivo corrupto/inexistente
+- TDD de `correr()` en `main.py`: funcion PURA del flujo de una corrida (alertas + contador de fallas + independencia entre paises)
+- `main.py` real end-to-end: `recolectar()` (despacha por `pais.acceso`) -> `correr()` -> `guardar()`, siempre exit 0
+- Descarga del scraper: normalizacion de caracteres fantasma (`\u200b`/nbsp) + decodificador charset (bs4 gasleck jetidge sin meta charset)
+- **Correctiva TDD importante:** snapshot placeholder de una siembra fallida (texto="") + recuperacion = SIEMBRA, no CIERRE falso (R1)
+
+**Hallazgos relevantes (Nivel 4 del plan activado con evidencia):**
+- 🇳🇿 NZ (Incapsula) no pasa ni con Chromium headless "plain": implementado `collectors/browser.py` Chromium **headful** + `--disable-blink-features=AutomationControlled` + reload hasta 3 veces: **UN PASAJE con cookies resuelve el challenge** (pase 0: 686KB, "closed for" presente). Config nuevo: campo `acceso = "http" | "navegador"`
+- 🇨🇦 CA: en local httpx/requests/curl TODOS timeout a canada.ca (ruta Akamai/chile) — pero con Chromium headful pasa y trae el banner "IEC season is closed" (190KB). Tuvo tunel 404 por typo `Services` vs `services` — corregido
+- 🇯🇵 JP: .go.jp TLS WAF SSE — con Chromium headful **SI PASA** (46KB + "apertura del agendamiento" localizado); campo `acceso = "navegador"` en config
+- **CORRIDA REAL FINAL 5/5 OK:** AU "Open 3,400" (abierto) / CA "season is closed" / NZ "closed for 2026" / JP "apertura del agendamiento" (abierto: notificara cuando la tarjeta apague en etapa 4) / IE desconocido
+- 2nd corrida idempotente: 0 alertas duplicadas
+
+**Pendientes para la próxima sesión:**
+- Etapa 4: TDD de `notify.py` (embeds Discord por tipo de decision) + webhook de pruebas de Kevin
+- Etapa 3.x refinamiento (opcional): los snapshots de CA/IE guardan texto COMPLETO oase (10-40KB con menus) — considerar ventana/recorte alrededor de seccion relevante para reduccion de falsos CAMBIO
+
+**Estado al cierre:** Etapa 3 completada ✅ — 55 tests verde; ruff limpio; `python -m src.main` corre las 5 fuentes reales sin errores
+
+

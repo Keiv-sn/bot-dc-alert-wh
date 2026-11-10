@@ -25,6 +25,23 @@ class TestConfigReal:
         assert "season is open" in ca.keywords_abierto
         assert "season is closed" in ca.keywords_cerrado
 
+    def test_acceso_navegador_solo_para_fuentes_con_waf(self) -> None:
+        paises = load_countries(CONFIG_REAL)
+        assert paises["au"].acceso == "http"
+        assert paises["ca"].acceso == "navegador"
+        assert paises["nz"].acceso == "navegador"
+        assert paises["jp"].acceso == "navegador"
+
+    def test_acceso_desconocido_da_error_claro(self, tmp_path: Path) -> None:
+        config = tmp_path / "countries.toml"
+        config.write_text(
+            '[paises.xx]\nnombre = "X"\nurl = "https://x"\nmetodo = "texto"\n'
+            'acceso = "homing-pigeon"\nkeywords_abierto = []\nkeywords_cerrado = []\n',
+            encoding="utf-8",
+        )
+        with pytest.raises(ConfigError, match="homing-pigeon"):
+            load_countries(config)
+
     def test_metodo_valido_y_datos_asociados(self) -> None:
         for pais in load_countries(CONFIG_REAL).values():
             if pais.metodo == "fila":

@@ -14,6 +14,8 @@ from pathlib import Path
 RUTA_CONFIG_DEFECTO = Path("config/countries.toml")
 
 METODOS_VALIDOS = {"texto", "fila", "selector"}
+ACCESOS_VALIDOS = {"http", "navegador"}
+ACCESO_DEFECTO = "http"
 
 
 class ConfigError(Exception):
@@ -30,6 +32,7 @@ class CountryConfig:
     metodo: str
     keywords_abierto: list[str] = field(default_factory=list)
     keywords_cerrado: list[str] = field(default_factory=list)
+    acceso: str = ACCESO_DEFECTO
     url_respaldo: str = ""
     ancla: str = ""
     selector: str = ""
@@ -68,6 +71,12 @@ def _a_country_config(codigo: str, datos: dict, ruta: Path) -> CountryConfig:
     if metodo == "selector" and not str(datos.get("selector", "")).strip():
         raise error_claro("metodo 'selector' exige el campo 'selector'")
 
+    acceso = str(datos.get("acceso", ACCESO_DEFECTO))
+    if acceso not in ACCESOS_VALIDOS:
+        raise error_claro(
+            f"acceso '{acceso}' desconocido; validos: {sorted(ACCESOS_VALIDOS)}"
+        )
+
     return CountryConfig(
         codigo=codigo,
         nombre=str(datos["nombre"]),
@@ -75,6 +84,7 @@ def _a_country_config(codigo: str, datos: dict, ruta: Path) -> CountryConfig:
         metodo=metodo,
         keywords_abierto=list(datos.get("keywords_abierto", [])),
         keywords_cerrado=list(datos.get("keywords_cerrado", [])),
+        acceso=acceso,
         url_respaldo=str(datos.get("url_respaldo", "")),
         ancla=str(datos.get("ancla", "")),
         selector=str(datos.get("selector", "")),

@@ -42,18 +42,14 @@
 
 ## Etapa 3 — Motor de detección + Persistencia (acordadas como EL MOMENTO importante — etapas 3 y 5 del plan original fusionadas, ver PLAN §7)
 
-- [ ] **TDD `detection.py`:** `f(snapshot_previo, html_nuevo) → Decision(tipo, detalles?)`. Casos obligatorios:
-  - [ ] Primera corrida → `SIEMBRA` (no notifica) [R1]
-  - [ ] abierto→abierto → `SIN_RECAMBIO` [R2]
-  - [ ] cerrado→abierto → `APERTURA` ✅ notifica
-  - [ ] abierto→cerrado → `CIERRE` (notifica; útil si se reabre después)
-  - [ ] keywords cambian sin abrir/cerrar → `CAMBIO` con detalle de las diferencias
-  - [ ] 2 fallos consecutivos misma fuente → `FUENTE_INACCESIBLE` (1 fallo → `IGNORE` silencioso) [R3]
-  - [ ] país 1 falla ≠ afecta decisión de países 2–5 [R4]
-- [ ] **TDD `state.py`:** round-trip JSON, tolerante a JSON corrupto (regenera desde cero como siembra), snapshot por país con timestamp
-- [ ] `main.py` orquesta **solo lenguaje declarativo**: colectar (aunque un país falle) → detectar → notificar → guardar
+- [x] **TDD `detection.py`:** `clasificar()`, `decidir()`, `decidir_fallo()` — todas las reglas R1-R4 cubiertas (incl. snapshot placeholder de una siembra fallida → siembra, evitando cierre falso)
+- [x] **TDD `state.py`:** `Snapshot` + round-trip JSON, tolerante a JSON corrupto (regenera desde cero como siembra)
+- [x] **TDD `correr()`** en `main.py`: flujo de corrida puro y testeable (8 tests): alertas, fallos consecutivos, países independientes
+- [x] **`main.py` orquesta real end-to-end:** recolectar (http o navegador según config) → detectar → alertar → guardar, SIEMPRE exit 0
+- [x] **Colector navegador (Nivel 4 activado por evidencia):** `collectors/browser.py` con Chromium headful + reload de challenge — resuelve CA (Akamai), NZ (Incapsula), JP (TLS WAF); campos `acceso` en config y tests
+- [x] Normalización de caracteres fantasma (\u200b/nbsp) y decodificador de charset explícito (scroll findings)
 
-✅ **Cierre:** toda la lógica de negocio está en funciones puras testeables; suite de detección verde cubriendo R1–R4.
+✅ **Cierre:** toda la lógica de negocio está en funciones puras testeables; suite de detección verde cubriendo R1–R4. **[2026-11-10 CORRIDA REAL 5/5 VERIFICADA: AU abierto; CA cerrado; NZ cerrado; JP abierto (agendamiento vigente); IE desconocido (indirecto)]**
 
 ---
 
@@ -117,7 +113,7 @@
 |-------|--------|--------------|
 | 1 — Preparación | ✅ **Completada** | 2026-11-10 |
 | 2 — Extracción | ✅ **Completada** | 2026-11-10 |
-| 3 — Detección + Estado | ⬜ Pendiente | — |
+| 3 — Detección + Estado | ✅ **Completada** (corrida real 5/5 verificada) | 2026-11-10 |
 | 4 — Discord | ⬜ Pendiente | — |
 | 5 — Persistencia revisada | ⬜ Pendiente | — |
 | 6 — GitHub Actions | ⬜ Pendiente | — |

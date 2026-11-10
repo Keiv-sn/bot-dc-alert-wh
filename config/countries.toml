@@ -5,6 +5,8 @@
 #   nombre           : nombre para mostrar (mensajes de Discord)
 #   url              : fuente oficial primaria
 #   url_respaldo     : fuente oficial alternativa si la primaria bloquea (opcional)
+#   acceso           : "http" (httpx, por defecto) | "navegador" (Chromium/Playwright
+#                      para fuentes con WAF: Incapsula de NZ, .go.jp, canada.ca)
 #   metodo           : extraccion -> "texto" | "fila" | "selector"
 #   ancla            : solo metodo "fila" — texto contenido en la fila a extraer
 #   selector         : solo metodo "selector" — CSS del elemento de estado
@@ -25,6 +27,7 @@ keywords_cerrado = ["closed", "check ballot"]
 [paises.ca]
 nombre = "Canadá 🇨🇦"
 url = "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec/become-candidate.html"
+acceso = "navegador"  # canada.ca bloquea clientes HTTP desde red chilena (Etapa 3)
 metodo = "texto"
 # El banner de temporada cambia explicitamente: "season is closed" -> "season is open"
 # cuando las rondas empiezan (verificado live 2026-11-10)
@@ -41,6 +44,7 @@ keywords_cerrado = []
 [paises.nz]
 nombre = "Nueva Zelanda 🇳🇿"
 url = "https://www.immigration.govt.nz/visas/chile-working-holiday-visa/"
+acceso = "navegador"  # WAF Incapsula: requiere navegador real (Etapa 3)
 metodo = "selector"
 selector = ".visa-page__status-wrapper"
 keywords_abierto = ["open for"]
@@ -50,6 +54,7 @@ keywords_cerrado = ["closed for"]
 nombre = "Japón 🇯🇵"
 url = "https://www.cl.emb-japan.go.jp/itpr_es/WorkingHolidayChileJapon.html"
 url_respaldo = "https://www.mofa.go.jp/mofaj/toko/working/index.html"
+acceso = "navegador"  # WAF por huella TLS en .go.jp (Etapa 3)
 metodo = "texto"
 keywords_abierto = ["apertura del agendamiento", "convocatoria abierta"]
 keywords_cerrado = []
