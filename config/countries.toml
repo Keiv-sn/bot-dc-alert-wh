@@ -1,0 +1,55 @@
+# Configuracion de los paises monitoreados (decision D1 y arquitectura de
+# docs/PLAN.md). Agregar un pais nuevo = agregar un bloque [paises.X].
+#
+# Claves:
+#   nombre           : nombre para mostrar (mensajes de Discord)
+#   url              : fuente oficial primaria
+#   url_respaldo     : fuente oficial alternativa si la primaria bloquea (opcional)
+#   metodo           : extraccion -> "texto" | "fila" | "selector"
+#   ancla            : solo metodo "fila" — texto contenido en la fila a extraer
+#   selector         : solo metodo "selector" — CSS del elemento de estado
+#   keywords_abierto : señales (minúsculas) de convocatoria ABIERTA
+#   keywords_cerrado : señales (minúsculas) de convocatoria CERRADA
+#
+# keywords vacias = pais aun en verificacion: el motor de deteccion lo trata
+# por deteccion de cambios, no por keywords (refinar al validar la fuente).
+
+[paises.au]
+nombre = "Australia 🇦🇺"
+url = "https://immi.homeaffairs.gov.au/what-we-do/whm-program/status-of-country-caps"
+metodo = "fila"
+ancla = "Chile"
+keywords_abierto = ["open"]
+keywords_cerrado = ["closed", "check ballot"]
+
+[paises.ca]
+nombre = "Canadá 🇨🇦"
+url = "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec/become-candidate.html"
+metodo = "texto"
+# El banner de temporada cambia explicitamente: "season is closed" -> "season is open"
+# cuando las rondas empiezan (verificado live 2026-11-10)
+keywords_abierto = ["season is open"]
+keywords_cerrado = ["season is closed"]
+
+[paises.ie]
+nombre = "Irlanda 🇮🇪"
+url = "https://www.ireland.ie/en/chile/santiago/services/visas/chile-working-holiday-agreement/"
+metodo = "texto"
+keywords_abierto = ["are now open", "round is open"]
+keywords_cerrado = []
+
+[paises.nz]
+nombre = "Nueva Zelanda 🇳🇿"
+url = "https://www.immigration.govt.nz/visas/chile-working-holiday-visa/"
+metodo = "selector"
+selector = ".visa-page__status-wrapper"
+keywords_abierto = ["open for"]
+keywords_cerrado = ["closed for"]
+
+[paises.jp]
+nombre = "Japón 🇯🇵"
+url = "https://www.cl.emb-japan.go.jp/itpr_es/WorkingHolidayChileJapon.html"
+url_respaldo = "https://www.mofa.go.jp/mofaj/toko/working/index.html"
+metodo = "texto"
+keywords_abierto = ["apertura del agendamiento", "convocatoria abierta"]
+keywords_cerrado = []

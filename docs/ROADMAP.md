@@ -30,12 +30,11 @@
 
 **Paso 0 (acción de Kevin):** guardar desde el navegador como HTML, en `tests/fixtures/`: `au.html`, `ie.html`, `jp.html` (+ `cl.html` si aparecen nuevas fuentes). Se pide con nombre de archivo exacto al llegar aquí.
 
-- [ ] **TDD `collectors/base.py`** con mocks HTTP: 200 válido, timeout, 403, HTML vacío, red caída → errores clasificados (`SourceError(tipo)`)
-- [ ] Headers de navegador real en el fetch (ver PLAN §4 Nivel 2/3 pb Japón)
-- [ ] **TDD `collectors/scraper.py`**: dado fixture HTML → texto normalizado de la sección relevante (dado el país y su método de extracción en la config)
-- [ ] `config/countries.toml` con los 5 bloques: `url`, `url_respaldo` (si aplica), `keywords_abierto`, `keywords_cerrado`, `metodo_extraccion`
-- [ ] **TDD `config.py`:** carga TOML → dataclasses validadas; error claro si falta un campo o país
-- [ ] Chequeo manual real contra `immi.homeaffairs.gov.au` y `canada.ca` (las 2 fuentes con más incertidumbre de estructura)
+- [x] **TDD `collectors/base.py`** con mocks HTTP: 200 válido, timeout, 403, HTML vacío, red caída → errores clasificados (`SourceError(tipo)`); headers de navegador real; reintento solo para red/timeout
+- [x] **TDD `collectors/scraper.py`**: `extract_text` (texto completo), `extract_row_text` (Australia), `extract_selector_text` (NZ) — probados contra fixtures REALES
+- [x] `config/countries.toml` con los 5 bloques: `url`, `url_respaldo` (opcional), `keywords_abierto`, `keywords_cerrado`, `metodo` (texto/fila/selector)
+- [x] **TDD `config.py`:** carga TOML → dataclasses `CountryConfig` validadas; errores claros por campo faltante o método inválido
+- [x] Verificación live de fuentes inciertas: **Canadá** resuelta (`become-candidate.html` con banner "IEC season is open/closed"); AU responde 200 desde conexión local
 
 ✅ **Cierre:** cada collector devuelve texto normalizado desde su fixture real; suite de tests de collectors verde.
 
@@ -117,7 +116,7 @@
 | Etapa | Estado | Fecha cierre |
 |-------|--------|--------------|
 | 1 — Preparación | ✅ **Completada** | 2026-11-10 |
-| 2 — Extracción | ⬜ Pendiente | — |
+| 2 — Extracción | ✅ **Completada** | 2026-11-10 |
 | 3 — Detección + Estado | ⬜ Pendiente | — |
 | 4 — Discord | ⬜ Pendiente | — |
 | 5 — Persistencia revisada | ⬜ Pendiente | — |
