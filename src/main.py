@@ -9,6 +9,7 @@ regla de negocio es testeable sin red, sin archivos y sin Discord.
 from __future__ import annotations
 
 import datetime
+import os
 import sys
 from dataclasses import replace
 
@@ -19,6 +20,7 @@ from src.collectors.browser import fetch_page_navegador
 from src.collectors.scraper import extraer
 from src.config import load_countries
 from src.detection import decidir, decidir_fallo
+from src.notify import construir_mensaje, enviar
 from src.state import Snapshot, cargar, guardar
 
 Resultado = str | SourceError
@@ -91,6 +93,23 @@ def recolectar(paises: dict, client: httpx.Client) -> dict[str, Resultado]:
     return resultados
 
 
+def notificar(alertas: list[tuple[str, str]], paises: dict, webhook: str) -> int:
+    """Manda un embed por alerta; devuelve cuantos envios fallaron."""
+    if not webhook:
+        print("webhook no configurado (DISCORD_WEBHOOK_URL): alertas solo en log")
+        for codigo, tipo in alertas:
+            print(f"  alerta pendiente: {codigo}:{tipo}")
+        return len(alertas)
+    fallas = 0
+    with httpx.Client() as client:
+        for codigo, tipo in alertas:
+            payload = construir_mensaje(paises[codigo], tipo)
+            if not enviar(webhook, payload, client):
+                fallas += 1
+                print(f"  fallo el envio a Discord de {codigo}:{tipo}")
+    return fallas
+
+
 def main() -> int:
     """Punto de entrada: SIEMPRE termina con exit 0 para no romper el cron."""
     paises = load_countries()
@@ -102,10 +121,11 @@ def main() -> int:
     estado_nuevo, alertas = correr(paises, estado_previo, resultados)
     guardar(estado_nuevo)
 
-    mensaje_alerta = "; ".join(
+    fallas_envio = notificar(alertas, paises, os.getenv("DISCORD_WEBHOOK_URL", ""))
+    resumen_alertas = "; ".join(
         f"{codigo}:{tipo}" for codigo, tipo in alertas
     ) or "ninguna"
-    print(f"corrida completa | alertas: {mensaje_alerta}")
+    print(f"corrida completa | alertas: {resumen_alertas} | envios fallidos: {fallas_envio}")
     return 0
 
 

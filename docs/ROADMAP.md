@@ -57,9 +57,9 @@
 
 **Acción de Kevin:** crear webhook en un servidor de Discord de pruebas y darlo al agente como valor, o guardarlo en secret/env var local para pruebas manuales (nunca commitear el webhook real).
 
-- [ ] **TDD `notify.py`:** payload correcto por tipo de decisión: embeds, color, título (🟢/🔄/🔴), URL de fuente, hora CLT
-- [ ] POST asincrono con timeout y un solo `retry` (fallas de Discord no tumbean la corrida)
-- [ ] Prueba manual con webhook de pruebas → 3 mensajes reales (apertura simulada, cambio simulado, error simulado)
+- [x] **TDD `notify.py`:** payload correcto por tipo de decision: embeds, color, título (🟢/🔴/🔄/⚠️), URL de fuente, horario CLT (`America/Santiago` con tzdata); envío POST con un solo reintento (httpx.MockTransport) tolerante a fallos
+- [x] Integración: `main.notificar()` — webhook por var de entorno `DISCORD_WEBHOOK_URL`; sin webhook → solo log, exit 0 igual
+- [ ] Prueba manual con webhook de pruebas → 3 mensajes reales (apertura simulada, cambio simulado, error simulado) **[pendiente: Kevin debe entregar la URL del webhook]**
 
 ✅ **Cierre:** capturas de los mensajes en Discord definidas (descripción textual en la bitácora) + suite de notify verde.
 
@@ -114,7 +114,7 @@
 | 1 — Preparación | ✅ **Completada** | 2026-11-10 |
 | 2 — Extracción | ✅ **Completada** | 2026-11-10 |
 | 3 — Detección + Estado | ✅ **Completada** (corrida real 5/5 verificada) | 2026-11-10 |
-| 4 — Discord | ⬜ Pendiente | — |
+| 4 — Discord | 🟡 En marcha (falta prueba manual con webhook) | 2026-11-10 |
 | 5 — Persistencia revisada | ⬜ Pendiente | — |
 | 6 — GitHub Actions | ⬜ Pendiente | — |
 | 7 — Pruebas y lanzamiento | ⬜ Pendiente | — |

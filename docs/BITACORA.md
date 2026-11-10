@@ -120,4 +120,28 @@
 
 **Estado al cierre:** Etapa 3 completada ✅ — 55 tests verde; ruff limpio; `python -m src.main` corre las 5 fuentes reales sin errores
 
+------------------------------------------------------------
+
+## 2026-11-10 | ETAPA 4 — Notificaciones Discord (TDD)
+**Agente:** opencode GLM-5.3-Flash-Free (build, sesion continua)
+
+**Que se hizo:**
+- TDD de `notify.py` (10 tests): `construir_mensaje()` — embed con color/icocono/titulo/description/URL de fuente/footer por cada tipo de decision (apertura verde 0x57F287, cierre rojo 0xED4245, cambio amarillo 0xFEE75C, fuente_inaccesible gris 0x99AAB5)
+- `hora_chile()`: formato regional zoneinfo America/Santiago + paquete tzdata (necesario en Windows/Actions) + tolerante a ISO invalido (devuelve "")
+- `enviar()`: POST con timeout 15s + 1 reintento; cualquier excepcion HTTP -> False, nunca tumba la corrida
+- `main.notificar()`: webhook desde var de entorno `DISCORD_WEBHOOK_URL`; sin webhook -> imprime alertas pendientes y sigue (exit 0 garantizado)
+- Corrida real integrada OK ("webhook no configurado" -> alertas solo log)
+
+**Hallazgos relevantes:**
+- `tzdata` es OBLIGATORIO en Windows y Actions para America/Santiago — agregado a dependencies
+- httpx(MockTransport handler con error interno) es capturado por `enviar` como fallo de red — estableci tests del handler SIEMPRE limpios para mensajear con exactitud el caso deseado
+- Los titulos usan nombre del pais con flag embebido desde countries.toml (nombre = "Australia AKey")
+
+**Pendientes para la prÃ³xima sesion:**
+- Entidad Kevin: crear webhook en Discord de pruebas y entregar la URL (o crear secret) para correr la Prueba Manual de embeddings reales
+- Tras validacion manual: marcar cierre de Etapa 4 y saltar a Etapa 5 (persistencia revisada + .gitattributes si diffs ruidosos de state.json)
+
+**Estado al cierre:** Etapa 4 en marcha 🟡 — 65 tests verde; ruff limpio; falta prueba manual con webhook
+
+
 
