@@ -8,7 +8,14 @@ contra las fuentes oficiales y muestra los payloads capturados.
 Credenciales reales: cero. Ideal para verificar el ruteo D9, la evidencia
 D10 y la ausencia de menciones sin exponer webhooks.
 
-Uso (desde la raiz del repo):  python tools/simular_discord.py
+Modo opcional `--reenviar`: ademas de capturar, reenvia cada payload a los
+webhooks REALES que tu mismo tengas en las variables de entorno (solo en tu
+PC, nunca en el chat del agente) — para ver los embeds reales en tu Discord
+de pruebas.
+
+Uso (desde la raiz del repo):
+  python tools/simular_discord.py              # solo simulacion local
+  python tools/simular_discord.py --reenviar   # + embeds reales en tu Discord
 """
 
 from __future__ import annotations
@@ -23,6 +30,10 @@ from pathlib import Path
 
 PUERTO = 8765
 RECIBIDOS: list[dict] = []
+WEBHOOK_POR_CANAL = {  # canal simulado -> variable de entorno real
+    "canal-publico": "DISCORD_WEBHOOK_URL",
+    "canal-admin": "DISCORD_WEBHOOK_ADMIN_URL",
+}
 
 
 class Receptor(BaseHTTPRequestHandler):
@@ -32,7 +43,7 @@ class Receptor(BaseHTTPRequestHandler):
         largo = int(self.headers.get("Content-Length", 0))
         RECIBIDOS.append(
             {
-                "canal": self.path,
+                "canal": self.path.lstrip("/"),
                 "payload": json.loads(self.rfile.read(largo)),
             }
         )
@@ -93,7 +104,26 @@ def main() -> int:
         print(f"  footer: {embed['footer']['text']}")
         for campo in embed.get("fields", []):
             print(f"  campo [{campo['name']}]: {campo['value'][:130]}")
+
+    if "--reenviar" in sys.argv:
+        reenviar_a_discord()
     return 0
+
+
+def reenviar_a_discord() -> None:
+    """Reenvia los payloads capturados a tus webhooks reales (solo tu PC)."""
+    import httpx
+
+    for recibido in RECIBIDOS:
+        variable = WEBHOOK_POR_CANAL.get(recibido["canal"], "")
+        destino = os.environ.get(variable, "")
+        if not destino:
+            print(f"\n[{recibido['canal']}] sin webhook real en ${variable}: no reenviado")
+            continue
+        with httpx.Client() as client:
+            respuesta = client.post(destino, json=recibido["payload"], timeout=15.0)
+        ok = 200 <= respuesta.status_code < 300
+        print(f"\n[{recibido['canal']}] reenviado a ${variable}: {'OK' if ok else f'HTTP {respuesta.status_code}'}")
 
 
 if __name__ == "__main__":
