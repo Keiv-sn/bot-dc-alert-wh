@@ -15,7 +15,7 @@ sin necesidad de PC encendida.
 | [`docs/BITACORA.md`](docs/BITACORA.md) | Bitácora: todo agente registra hitos y hallazgos al final de cada sesión |
 
 > **Para agentes de IA:** leer los 3 documentos antes de escribir código.
-> Respetar las decisiones D1–D8 de `docs/PLAN.md` y registrar la sesión en `docs/BITACORA.md`.
+> Respetar las decisiones D1–D10 de `docs/PLAN.md` y registrar la sesión en `docs/BITACORA.md`.
 
 ## Estructura
 
@@ -39,12 +39,27 @@ bot-dc-wh/
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e ".[dev]"
+pip install httpx beautifulsoup4 "playwright>=1.49" tzdata pytest ruff
+python -m playwright install chromium   # para los países con acceso "navegador"
 
 python -m src.main      # corrida del bot
 pytest                  # tests
 ruff check .            # linter
 ```
+
+## Canales de Discord (diseño para comunidad grande — PLAN §8)
+
+| Alerta | Canal | Webhook (variable de entorno) |
+|--------|-------|-------------------------------|
+| 🟢 Apertura / 🔴 Cierre | público (comunidad) | `DISCORD_WEBHOOK_URL` |
+| 🔄 Cambio / ⚠️ Fuente inaccesible | admin (staff) | `DISCORD_WEBHOOK_ADMIN_URL` |
+
+Cada embed indica **"Detectado"** con hora de Chile, **nunca menciona a nadie**
+(`allowed_mentions: []`), limita la alertas por corrida y respeta un cooldown
+de 24 h por país. La apertura/cierre incluyen la **evidencia**: cita literal
+de la fuente oficial más el enlace directo para verificar.
+
+Si el canal admin no tiene webhook, esas alertas quedan solo en el log de la corrida.
 
 ## Principios (resumen — detalle en docs/PLAN.md §6)
 

@@ -2,7 +2,7 @@
 
 Decisiones posibles (tipos): siembra, sin_cambios, apertura, cierre, cambio,
 ignore, fuente_inaccesible. Solo apertura/cierre/cambio/fuente_inaccesible
-se notifican (docs/PLAN.md).
+se notifican (docs/PLAN.md R1-R4 + D10).
 """
 
 from __future__ import annotations
@@ -13,6 +13,8 @@ from src.config import CountryConfig
 from src.state import Snapshot
 
 UMBRAL_DE_FALLOS = 2  # regla R3: se nota solo a partir del 2do fallo consecutivo
+VENTANA_CONTEXTO = 250  # D10: chars alrededor de la keyword para exigir contexto
+LARGO_EVIDENCIA = 120  # D10: chars de la cita literal que va al embed
 
 
 @dataclass(frozen=True)
@@ -22,16 +24,49 @@ class Decision:
     detalle: str = ""
 
 
+def _keyword_cuenta(texto_min: str, keyword: str, contexto: str) -> bool:
+    """D10 anti-noticia: con `contexto`, la keyword debe estar cerca del pais."""
+    if not contexto:
+        return keyword in texto_min
+    inicio = 0
+    while (pos := texto_min.find(keyword, inicio)) != -1:
+        ventana = texto_min[max(0, pos - VENTANA_CONTEXTO): pos + len(keyword) + VENTANA_CONTEXTO]
+        if contexto in ventana:
+            return True
+        inicio = pos + 1
+    return False
+
+
 def clasificar(texto: str, pais: CountryConfig) -> str:
     """Aplica las keywords del pais al texto normalizado."""
     texto = texto.lower()
-    abierto = any(keyword in texto for keyword in pais.keywords_abierto)
-    cerrado = any(keyword in texto for keyword in pais.keywords_cerrado)
+    abierto = any(
+        _keyword_cuenta(texto, keyword, pais.contexto) for keyword in pais.keywords_abierto
+    )
+    cerrado = any(
+        _keyword_cuenta(texto, keyword, pais.contexto) for keyword in pais.keywords_cerrado
+    )
     if abierto and not cerrado:
         return "abierto"
     if cerrado and not abierto:
         return "cerrado"
     return "desconocido"
+
+
+def evidencia(texto: str, keywords: list[str]) -> str:
+    """D10: cita literal (~LARGO_EVIDENCIA chars) alrededor de la keyword.
+
+    Vacia si ninguna keyword aparece: sin evidencia no se inventa nada.
+    """
+    texto_min = texto.lower()
+    for keyword in keywords:
+        pos = texto_min.find(keyword.lower())
+        if pos == -1:
+            continue
+        inicio = max(0, pos - LARGO_EVIDENCIA // 3)
+        fin = min(len(texto), pos + len(keyword) + LARGO_EVIDENCIA * 2 // 3)
+        return texto[inicio:fin].strip()
+    return ""
 
 
 def decidir(pais: CountryConfig, snapshot: Snapshot | None, texto: str) -> Decision:

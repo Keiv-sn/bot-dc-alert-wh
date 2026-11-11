@@ -1,0 +1,5 @@
+# Etapa 5: normalizar line endings del estado para diffs limpios
+data/state.json text eol=lf
+*.toml text eol=lf
+*.py text eol=lf
+*.yml text eol=lf

@@ -65,13 +65,28 @@
 
 ---
 
+## Etapa 4b — Mensajería para comunidad grande (decisions D9/D10, PLAN §8)
+
+**Contexto:** el bot sirve a la comunidad de Discord de un youtuber. Reglas del producto en PLAN §8: evidencia verificable, noticia ≠ convocatoria, cambios menores fuera del canal público, fuente inaccesible solo a staff, hora de detección explícita, cero menciones, cero saturación.
+
+- [x] **TDD `notify.py`:** campo **"Detectado"** (hora Chile) + campo **"Evidencia"** (cita literal de la fuente) en apertura/cierre; `allowed_mentions: {"parse": []}` en todo payload; footer "detección automática"; redacción profesional
+- [x] **TDD `detection.py`:** `evidencia()` (cita ~120 chars alrededor de la keyword matcheada); `clasificar()` respeta `contexto` por país (co-ocurrencia en ventana ~250 chars → una noticia de otro programa ya no dispara apertura)
+- [x] **TDD `correr()` en `main.py`:** cooldown **24 h** por país+tipo (`alertas_enviadas` en Snapshot/state.json, tolerante a estados viejos) + tope **3 embeds/corrida** con prioridad apertura > cierre > fuente_inaccesible > cambio (`seleccionar_alertas()`)
+- [x] **Ruteo 2 canales en `main.notificar()`:** apertura/cierre → `DISCORD_WEBHOOK_URL` (público); cambio/fuente_inaccesible → `DISCORD_WEBHOOK_ADMIN_URL` (admin); falta admin → solo log; pausa 1 s entre envíos; `[alertas]` en countries.toml con `cooldown_horas`/`max_embeds_corrida`
+- [x] **Anti-ruido estructural:** `selector_seccion = "main"` para CA e IE (snapshot solo sección de contenido, sin menús) — reduce falsos CAMBIO hacia el canal admin
+- [ ] Prueba manual con 2 webhooks de pruebas → apertura con evidencia al canal público + fuente_inaccesible al canal admin **[pendiente: URLs de Kevin]**
+
+✅ **Cierre:** suite verde (~85 tests) + ruff limpio; corrida real 5/5 post-siembra sin falsos CAMBIO; embeds públicos sin menciones y con evidencia; prueba manual registrada en BITACORA.
+
+---
+
 ## Etapa 5 — Persistencia revisada + inicialización
 
 **Responsable agente:** retro-compatibilidad con datos ya existentes (el `state.json` se va a commitear, va a vivir en historial).
 
 - [ ] Semilla inicial empaquetada: si `data/state.json` no existe → modo siembra silenciosa explícito, logs claros en la corrida
 - [ ] **TDD:** cargar un `state.json` de formato antiguo no rompe nada (tolerancia a evolución del formato)
-- [ ] `.gitattributes` si se detecta ruido de diffs (ej. carga asimétrica con longa estampa de tiempo — decidir formato JSON compacto)
+- [x] `.gitattributes` con EOL normalizado (`data/state.json`, TOML, Python, YAML a LF) — hecho en Etapa 4b
 - [ ] Verificar exit codes: la corrida que detecta algo notifica y termina 0; el fallo NO debe dejar Actions rojo (el monitoreo silently falla, no rompe el build)
 
 ✅ **Cierre:** simulación local de 3 corridas seguidas → solo notifica lo que cambia; nada se repite.
@@ -115,6 +130,7 @@
 | 2 — Extracción | ✅ **Completada** | 2026-11-10 |
 | 3 — Detección + Estado | ✅ **Completada** (corrida real 5/5 verificada) | 2026-11-10 |
 | 4 — Discord | 🟡 En marcha (falta prueba manual con webhook) | 2026-11-10 |
+| 4b — Mensajería comunidad | 🟡 Código y corrida real listos (falta prueba manual con 2 webhooks) | 2026-11-11 |
 | 5 — Persistencia revisada | ⬜ Pendiente | — |
 | 6 — GitHub Actions | ⬜ Pendiente | — |
 | 7 — Pruebas y lanzamiento | ⬜ Pendiente | — |

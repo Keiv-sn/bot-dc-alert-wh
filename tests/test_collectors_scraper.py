@@ -87,7 +87,31 @@ class TestDispatcher:
         assert info.value.codigo == "estructura"
 
 
-def _pais(metodo: str, ancla: str = "") -> CountryConfig:
+class TestSeccionRelevanteD10:
+    """`selector_seccion`: snapshot solo de la seccion de contenido, sin menus."""
+
+    HTML_CON_MENU = (
+        b"<html><body><nav>Menu Principal open enlaces skip content</nav>"
+        b"<main><p>2026 season is closed</p></main></body></html>"
+    )
+
+    def test_texto_con_seccion_extrae_solo_main(self) -> None:
+        pais = _pais("texto", selector_seccion="main")
+        assert extraer(pais, self.HTML_CON_MENU) == "2026 season is closed"
+
+    def test_seccion_ausente_retorna_texto_completo_fallback(self) -> None:
+        pais = _pais("texto", selector_seccion="main")
+        html = b"<html><body><p>2026 season is closed</p></body></html>"
+        assert "2026 season is closed" in extraer(pais, html)
+
+    def test_sin_selector_seccion_comporta_como_antes(self) -> None:
+        pais = _pais("texto")
+        texto = extraer(pais, self.HTML_CON_MENU)
+        assert "Menu Principal" in texto  # texto completo, como siempre
+
+
+def _pais(metodo: str, ancla: str = "", selector_seccion: str = "") -> CountryConfig:
     return CountryConfig(
         codigo="au", nombre="Australia", url="https://x", metodo=metodo, ancla=ancla,
+        selector_seccion=selector_seccion,
     )

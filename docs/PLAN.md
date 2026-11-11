@@ -18,6 +18,8 @@ Bot en Python que monitorea las páginas oficiales de los programas Working Holi
 | D6 | Stack | Python 3.12 · httpx + beautifulsoup4 · pytest · ruff |
 | D7 | Metodología | **TDD** (red → green → refactor) en etapas 2–5 |
 | D8 | Calidad | Principios de código limpio (ver §6) obligatorios |
+| D9 | Canales de Discord (Etapa 4b) | **2 webhooks con ruteo por tipo:** apertura/cierre → canal público de la comunidad; cambio/fuente inaccesible → canal de administración. Los webhooks NUNCA viven en el TOML ni el repo: solo variables de entorno `DISCORD_WEBHOOK_URL` (público) y `DISCORD_WEBHOOK_ADMIN_URL` (staff). Sin webhook admin → esas alertas quedan solo en el log |
+| D10 | Anti-ruido para comunidad grande (Etapa 4b) | (1) apertura/cierre llevan **evidencia verificable**: cita literal de la fuente + enlace; (2) keywords con `contexto` por país — una noticia no es una convocatoria; (3) cambios menores **nunca** van al canal público; (4) cooldown **24 h** por país+tipo persistido en `state.json`; (5) tope **3 embeds/corrida** con prioridad apertura > cierre > fuente_inaccesible > cambio; (6) `allowed_mentions: {"parse": []}` en todo payload — cero menciones, garantizado |
 
 ## 3. Fuentes oficiales (estado al 2026-11-09)
 
@@ -45,8 +47,8 @@ bot-dc-wh/
 │   ├── config.py          # carga y valida countries.toml → dataclasses tipadas
 │   ├── collectors/
 │   │   ├── base.py        # fetch con headers de navegador, timeout, retry, manejo de errores
-│   │   ├── scraper.py     # colector HTML genérico (cubre 4 de 5 países)
-│   │   └── playwight_jp.py  # (solo si Nivel 4 necesario) — MISMA interfaz que base
+│   │   ├── scraper.py     # colector HTML genérico (texto/fila/selector)
+│   │   └── browser.py     # Chromium headful para WAF (CA/NZ/JP) — MISMA interfaz que base
 │   ├── detection.py       # normalización + keywords + comparación con snapshot previo
 │   ├── notify.py          # formato de embeds → POST al webhook de Discord
 │   └── state.py           # cargar/guardar data/state.json (tolerante a archivo corrupto)
@@ -82,11 +84,29 @@ bot-dc-wh/
 | R3 — Sin duplicados | Si el estado no cambió respecto al snapshot, **no** se notifica (idempotente) |
 | R4 — Un país falla ≠ todo falla | Fallos de una fuente no impiden procesar las otras 4 |
 
-## 8. Mensajes de Discord (diseño acordado)
+## 8. Mensajes de Discord (diseño para comunidad grande — Etapa 4b)
 
-- Embeds con color por tipo: 🟢 **Apertura de convocatoria**, 🔄 Cambio relevante (requisitos/cupos), 🔴 Fuente inaccesible persistente, ℹ️ Info (siembra inicial silenciosa — solo log, no mensaje).
-- Cada mensaje incluye: país (flag + nombre), qué pasó, enlace directo a la fuente, fecha/hora en hora chilena (CLT), cupos si la página los informa.
-- Coordenadas del webhook en secreto de GitHub Actions (`DISCORD_WEBHOOK_URL`), nunca en el repo.
+**Reglas del producto acordadas con Kevin (NO re-discutir):**
+
+1. Una apertura oficial debe tener **evidencia verificable** (cita literal de la fuente + enlace directo).
+2. Una noticia **no** equivale a convocatoria abierta → keywords exigen `contexto` (co-ocurrencia con el nombre del país en una ventana cercana).
+3. Los cambios menores **no generan alertas públicas** (canal admin).
+4. Las fuentes inaccesibles se reportan a **administración**, no a toda la comunidad.
+5. Las alertas indican **cuándo se detectó** la información; nunca se inventa cuándo ocurrió.
+
+**Implementación:**
+
+| Tipo | Canal | Ícono/Color | Contenido del embed |
+|------|-------|-------------|---------------------|
+| apertura | público | 🟢 `0x57F287` | título+país, descripción, campo **"Detectado"** (hora de Chile), campo **"Evidencia"** (cita literal de la fuente), enlace directo |
+| cierre | público | 🔴 `0xED4245` | igual que apertura |
+| cambio | admin | 🔄 `0xFEE75C` | extracto del texto nuevo |
+| fuente_inaccesible | admin | ⚠️ `0x99AAB5` | código de error; sin cita (no hay texto) |
+
+- **`allowed_mentions: {"parse": []}`** en TODO payload: técnicamente imposible mencionar a alguien.
+- **Anti-saturación:** cooldown 24 h por país+tipo (campo `alertas_enviadas` en `state.json`), máx. 3 embeds por corrida (prioridad apertura > cierre > fuente_inaccesible > cambio), pausa de 1 s entre envíos.
+- **Anti-ruido estructural:** para países con `metodo = "texto"` sobre páginas enormes (CA, IE) se usa `selector_seccion = "main"`: el snapshot guarda solo la sección de contenido, no los menús → los CAMBIO que sobreviven son señal real.
+- El footer de cada embed dice "detección automática — verifica en la fuente".
 
 ## 9. Fuera de alcance (explícito)
 

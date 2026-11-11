@@ -33,28 +33,60 @@ TITULOS = {
     "fuente_inaccesible": "Fuente inaccesible",
 }
 TEXTOS = {
-    "apertura": "¡La convocatoria está ABIERTA! Revisa la fuente oficial cuanto antes.",
-    "cierre": "La convocatoria pasó a CERRADA.",
-    "cambio": "El texto de la página cambió sin abrir ni cerrar la convocatoria.",
-    "fuente_inaccesible": "No se pudo acceder a la fuente en corridas consecutivas.",
+    "apertura": (
+        "La convocatoria de Working Holiday está abierta. Revisa la fuente oficial "
+        "y postula a tiempo: los cupos suelen agotarse rápido."
+    ),
+    "cierre": "La convocatoria pasó a estado cerrado. No es posible postular en este momento.",
+    "cambio": (
+        "El contenido de la página oficial cambió sin abrir ni cerrar la convocatoria. "
+        "En revisión por administración."
+    ),
+    "fuente_inaccesible": (
+        "La fuente oficial no respondió en corridas consecutivas. "
+        "Administración verificará el acceso."
+    ),
 }
+FOOTER = "WH Alerts Chile · detección automática — verifica en la fuente"
 
 
 def construir_mensaje(
     pais: CountryConfig,
     tipo: str,
     detalle: str = "",
+    cita: str = "",
     ahora: datetime | None = None,
 ) -> dict:
-    """Payload de Discord (embed) para la alerta de un pais."""
+    """Payload de Discord (embed) para la alerta de un pais.
+
+    D10 (PLAN §8): incluye "Detectado" (hora de Chile) y, si hay `cita`,
+    la evidencia literal de la fuente. `allowed_mentions` vacio garantiza
+    que NINGUN mensaje pueda mencionar usuarios o roles.
+    """
     instante = ahora or datetime.now(UTC)
     titulo = f"{ICONOS[tipo]} {TITULOS[tipo]} — {pais.nombre}"
     partes = [TEXTOS[tipo]]
     if detalle:
         partes.append(f"_({detalle})_")
-    partes.append(f"📅 {hora_chile(instante.isoformat())}")
+
+    campos = [
+        {
+            "name": "Detectado",
+            "value": f"{hora_chile(instante.isoformat())} (hora de Chile)",
+            "inline": True,
+        }
+    ]
+    if cita:
+        campos.append(
+            {
+                "name": "Evidencia (texto de la fuente)",
+                "value": f"«{cita}»",
+                "inline": False,
+            }
+        )
 
     return {
+        "allowed_mentions": {"parse": []},
         "embeds": [
             {
                 "title": titulo,
@@ -62,9 +94,10 @@ def construir_mensaje(
                 "color": COLORES[tipo],
                 "url": pais.url,
                 "timestamp": instante.isoformat(),
-                "footer": {"text": "WH Alerts Chile"},
+                "fields": campos,
+                "footer": {"text": FOOTER},
             }
-        ]
+        ],
     }
 
 

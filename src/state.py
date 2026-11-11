@@ -8,7 +8,7 @@ cada corrida. La carga es tolerante: archivo ausente o corrupto = estado vacio
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 RUTA_DEFECTO = Path("data/state.json")
@@ -22,6 +22,9 @@ class Snapshot:
     texto: str  # texto extraido de la fuente (para detectar cambios)
     fallas_consecutivas: int = 0  # contador para la regla R3
     actualizado_en: str = ""  # ISO UTC de la ultima actualizacion
+    # D10 cooldown: ultima vez que se notifico cada tipo {tipo: ISO UTC}.
+    # Estado viejo sin esta clave carga como {} (tolerante).
+    alertas_enviadas: dict[str, str] = field(default_factory=dict)
 
 
 def cargar(ruta: Path = RUTA_DEFECTO) -> dict[str, Snapshot]:

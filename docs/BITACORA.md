@@ -143,5 +143,26 @@
 
 **Estado al cierre:** Etapa 4 en marcha 🟡 — 65 tests verde; ruff limpio; falta prueba manual con webhook
 
+------------------------------------------------------------
+
+## 2026-11-11 | ETAPA 4b — Mensajería para comunidad grande (D9/D10) + quick-win Etapa 5
+
+**Agente:** opencode GLM-5.3-Flash-Free (build, sesión continua)
+
+**Contexto:** Kevin definió el producto real: comunidad de Discord **grande** de un youtuber. Reglas: canal exclusivo de alertas, mensajes claros, sin saturación, enlaces oficiales, alertas importantes separadas de noticias informativas, sin menciones @everyone, apertura con evidencia verificable, noticia ≠ convocatoria, cambios menores no al canal público, fuente inaccesible solo a administración, indicar CUÁNDO SE DETECTÓ. Decisiones **D9/D10** cerradas con Kevin: 2 canales (público + admin), CAMBIO siempre admin, cooldown 24 h, tope 3 embeds/corrida.
+
+**Qué se hizo (TDD, ~26 tests nuevos):**
+- `notify.py`: campo **"Detectado"** (hora de Chile) + campo **"Evidencia"** (cita literal de la fuente); `allowed_mentions: {"parse": []}` en TODO payload (cero menciones garantizado); footer "detección automática — verifica en la fuente"; redacción profesional reescrita
+- `detection.py`: `evidencia()` (cita ~120 chars alrededor de la keyword; vacío si no hay match → no se inventa nada); `clasificar()` con `contexto` anti-noticia (la keyword solo cuenta si co-ocurre con el país en una ventana de ~250 chars)
+- `main.py`: cooldown 24 h por país+tipo (`_en_cooldown` + campo `alertas_enviadas`); `seleccionar_alertas()` con prioridad apertura > cierre > fuente_inaccesible > cambio y tope de embeds; `cita_para()` (evidencia por tipo); ruteo D9 en `notificar()` con `DISCORD_WEBHOOK_URL` (público) y `DISCORD_WEBHOOK_ADMIN_URL` (staff); pausa 1 s entre envíos; canal admin sin webhook → solo log, nunca se filtra al público
+- `state.py`: campo `alertas_enviadas` en `Snapshot` con default `{}` — estados viejos cargan tolerante (regresión cubierta)
+- `config.py`: campos `contexto` y `selector_seccion` por país + `AlertasConfig` (sección `[alertas]` del TOML: `cooldown_horas=24`, `max_embeds_corrida=3`; claves desconocidas = error claro)
+- `countries.toml`: `contexto = "chile"` para IE (la página lista acuerdos con otros países: una noticia de Alemania ya no dispara apertura); `selector_seccion = "main"` para CA e IE (snapshot sin menús ni navegación)
+- Quick-win Etapa 5: `.gitattributes` (EOL lf para state.json/toml/py/yml) + README con la tabla de canales/webhooks y setup correcto
+
+**Verificación real:** estado reiniciado → siembra 5/5 (AU abierto, CA cerrado, IE desconocido, NZ cerrado, JP abierto); segunda corrida idempotente con 0 alertas; ruido reducido: IE 6.4KB → 2.9KB, NZ 109 chars. Suite **91 tests** verde; ruff limpio.
+
+**Pendiente:** prueba manual con los 2 webhooks de Kevin (apertura con evidencia al canal público + fuente_inaccesible al canal admin).
+
 
 

@@ -1,7 +1,7 @@
-"""Tests del motor de deteccion (docs/PLAN.md R1-R4). Funciones puras."""
+"""Tests del motor de deteccion (docs/PLAN.md R1-R4 + D10). Funciones puras."""
 
 from src.config import CountryConfig
-from src.detection import clasificar, decidir, decidir_fallo
+from src.detection import clasificar, decidir, decidir_fallo, evidencia
 from src.state import Snapshot
 
 
@@ -9,6 +9,7 @@ def pais(
     codigo: str = "au",
     abierto: list[str] | None = None,
     cerrado: list[str] | None = None,
+    contexto: str = "",
 ) -> CountryConfig:
     return CountryConfig(
         codigo=codigo,
@@ -17,6 +18,7 @@ def pais(
         metodo="texto",
         keywords_abierto=abierto or [],
         keywords_cerrado=cerrado or [],
+        contexto=contexto,
     )
 
 
@@ -84,6 +86,48 @@ class TestDecidir:
         decision = decidir(pais(cerrado=["closed for"]), placeholder, "closed for 2026")
         assert decision.tipo == "siembra"
         assert decision.estado == "cerrado"
+
+
+class TestEvidencia:
+    """D10: una apertura debe tener evidencia verificable (cita de la fuente)."""
+
+    def test_cita_alrededor_de_la_keyword(self) -> None:
+        relleno = "palabra " * 30
+        texto = f"{relleno}la temporada esta ABIERTA desde hoy {relleno}"
+        cita = evidencia(texto, ["abierta"])
+        assert "ABIERTA" in cita
+        assert len(cita) < 170  # ventana corta, no la pagina entera
+
+    def test_sin_match_devuelve_vacio(self) -> None:
+        assert evidencia("nada relevante aqui", ["abierta"]) == ""
+
+    def test_prueba_las_keywords_en_orden(self) -> None:
+        cita = evidencia("texto con open", ["closed", "open"])
+        assert "open" in cita
+
+    def test_keyword_cercana_al_inicio_no_se_corta_mal(self) -> None:
+        cita = evidencia("open desde el primer caracter", ["open"])
+        assert cita.startswith("open")
+
+
+class TestClasificarContexto:
+    """D10: una noticia no equivale a convocatoria abierta."""
+
+    def test_keyword_con_contexto_cercano_cuenta(self) -> None:
+        irlanda = pais(abierto=["open"], contexto="chile")
+        texto = "programa entre irlanda y chile: applications are open"
+        assert clasificar(texto, irlanda) == "abierto"
+
+    def test_keyword_lejos_del_contexto_no_cuenta(self) -> None:
+        # noticia de otro programa: "open" a mas de una ventana de "chile"
+        irlanda = pais(abierto=["open"], contexto="chile")
+        lejania = "palabra " * 60  # ~360 chars
+        texto = f"chile y su embajada publican datos. {lejania} the germany scheme is open"
+        assert clasificar(texto, irlanda) == "desconocido"
+
+    def test_sin_contexto_configurado_comporta_como_antes(self) -> None:
+        australia = pais(abierto=["open"])
+        assert clasificar("the germany scheme is open", australia) == "abierto"
 
 
 class TestDecidirFallo:

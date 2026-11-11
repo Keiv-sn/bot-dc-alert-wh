@@ -12,9 +12,21 @@
 #   selector         : solo metodo "selector" — CSS del elemento de estado
 #   keywords_abierto : señales (minúsculas) de convocatoria ABIERTA
 #   keywords_cerrado : señales (minúsculas) de convocatoria CERRADA
+#   contexto         : D10 anti-noticia — la keyword solo cuenta si co-ocurre
+#                      con esta palabra (p. ej. "chile") en una ventana de
+#                      ~250 caracteres. Vacío = sin exigencia (opcional)
+#   selector_seccion : D10 anti-ruido — con metodo "texto", extrae solo esta
+#                      sección (p. ej. "main"), sin menús ni navegación
 #
 # keywords vacias = pais aun en verificacion: el motor de deteccion lo trata
 # por deteccion de cambios, no por keywords (refinar al validar la fuente).
+
+# D10: parametros de mensajeria (PLAN §8). Los webhooks NUNCA viven aqui:
+# son variables de entorno (DISCORD_WEBHOOK_URL = canal publico de comunidad,
+# DISCORD_WEBHOOK_ADMIN_URL = canal de staff).
+[alertas]
+cooldown_horas = 24        # no re-alertar el mismo pais+tipo antes de esto
+max_embeds_corrida = 3     # tope anti-saturacion por corrida
 
 [paises.au]
 nombre = "Australia 🇦🇺"
@@ -29,6 +41,7 @@ nombre = "Canadá 🇨🇦"
 url = "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec/become-candidate.html"
 acceso = "navegador"  # canada.ca bloquea clientes HTTP desde red chilena (Etapa 3)
 metodo = "texto"
+selector_seccion = "main"  # D10: sin menus, menos falsos CAMBIO
 # El banner de temporada cambia explicitamente: "season is closed" -> "season is open"
 # cuando las rondas empiezan (verificado live 2026-11-10)
 keywords_abierto = ["season is open"]
@@ -38,6 +51,8 @@ keywords_cerrado = ["season is closed"]
 nombre = "Irlanda 🇮🇪"
 url = "https://www.ireland.ie/en/chile/santiago/services/visas/chile-working-holiday-agreement/"
 metodo = "texto"
+selector_seccion = "main"  # D10: sin menus, menos falsos CAMBIO
+contexto = "chile"  # D10: noticias de otros programas no disparan apertura
 keywords_abierto = ["are now open", "round is open"]
 keywords_cerrado = []
 

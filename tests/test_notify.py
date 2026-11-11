@@ -1,6 +1,8 @@
 """Tests de notificaciones Discord: payload por tipo + envio tolerante."""
 
 
+from datetime import UTC, datetime
+
 import httpx
 import pytest
 
@@ -41,6 +43,33 @@ class TestConstruirMensaje:
     def test_apertura_incluye_estado_anterior(self) -> None:
         embed = construir_mensaje(pais(), "apertura", detalle="antes: cerrado")["embeds"][0]
         assert "cerrado" in embed["description"]
+
+
+class TestMensajeComunidad:
+    """D10 (PLAN §8): profesional, sin menciones, con hora de detección y evidencia."""
+
+    def test_payload_nunca_permite_menciones(self) -> None:
+        payload = construir_mensaje(pais(), "apertura")
+        assert payload["allowed_mentions"] == {"parse": []}
+
+    def test_campo_detectado_con_hora_de_chile(self) -> None:
+        ahora = datetime(2026, 11, 10, 12, 0, tzinfo=UTC)
+        embed = construir_mensaje(pais(), "apertura", ahora=ahora)["embeds"][0]
+        campo = next(f for f in embed["fields"] if f["name"] == "Detectado")
+        assert "09:00" in campo["value"]  # 12:00 UTC = 09:00 en noviembre
+
+    def test_campo_evidencia_con_la_cita_de_la_fuente(self) -> None:
+        embed = construir_mensaje(pais(), "apertura", cita="temporal ABIERTA")["embeds"][0]
+        campo = next(f for f in embed["fields"] if f["name"].startswith("Evidencia"))
+        assert "ABIERTA" in campo["value"]
+
+    def test_sin_cita_no_aparece_campo_evidencia(self) -> None:
+        embed = construir_mensaje(pais(), "cierre")["embeds"][0]
+        assert all(not f["name"].startswith("Evidencia") for f in embed["fields"])
+
+    def test_footer_declara_deteccion_automatica(self) -> None:
+        embed = construir_mensaje(pais(), "cambio")["embeds"][0]
+        assert "detección automática" in embed["footer"]["text"]
 
 
 class TestHoraChile:

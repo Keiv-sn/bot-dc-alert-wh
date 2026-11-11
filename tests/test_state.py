@@ -43,3 +43,29 @@ def test_snapshot_es_frozen(tmp_path) -> None:
     snapshot = Snapshot(estado="abierto", texto="x")
     with pytest.raises(Exception):  # noqa: B017 — dataclasses.FrozenInstanceError
         snapshot.estado = "cerrado"
+
+
+class TestAlertasEnviadasD10:
+    """Cooldown 24 h: marcas por tipo persistidas (docs/PLAN.md D10)."""
+
+    def test_alertas_enviadas_round_trip(self, tmp_path) -> None:
+        snapshot = Snapshot(
+            estado="abierto",
+            texto="open",
+            alertas_enviadas={"apertura": "2026-11-10T12:00:00+00:00"},
+        )
+        destino = tmp_path / "state.json"
+
+        guardar({"au": snapshot}, destino)
+
+        assert cargar(destino) == {"au": snapshot}
+
+    def test_estado_viejo_sin_alertas_enviadas_carga_tolerante(self, tmp_path) -> None:
+        destino = tmp_path / "state.json"
+        destino.write_text(
+            '{"au": {"estado": "abierto", "texto": "open", '
+            '"fallas_consecutivas": 0, "actualizado_en": "2026-11-10T12:00:00+00:00"}}',
+            encoding="utf-8",
+        )
+        cargado = cargar(destino)
+        assert cargado["au"].alertas_enviadas == {}

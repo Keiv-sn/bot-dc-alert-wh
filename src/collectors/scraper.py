@@ -79,10 +79,17 @@ def extract_selector_text(html: str | bytes, selector_css: str) -> str | None:
 def extraer(pais: CountryConfig, html: str | bytes) -> str:
     """Texto relevante segun el `metodo` declarado para el pais.
 
+    Con `selector_seccion` (D10, metodo texto): extrae solo esa seccion de
+    contenido — sin menús ni navegacion — para que los CAMBIO sean señal real.
+    Si la seccion no existe, cae al texto completo (paginas antiguas).
     Si fila/selector no matchean nada, la estructura de la pagina cambio:
     se reporta como SourceError('estructura'), igual que una pagina caida.
     """
     if pais.metodo == "texto":
+        if pais.selector_seccion:
+            seccion = extract_selector_text(html, pais.selector_seccion)
+            if seccion:
+                return seccion
         return extract_text(html)
     if pais.metodo == "fila":
         resultado = extract_row_text(html, pais.ancla)

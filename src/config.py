@@ -36,6 +36,12 @@ class CountryConfig:
     url_respaldo: str = ""
     ancla: str = ""
     selector: str = ""
+    # D10 anti-noticia: keyword solo cuenta si co-ocurre con esta palabra
+    # (p. ej. "chile") en una ventana cercana. Vacio = sin exigencia.
+    contexto: str = ""
+    # D10 anti-ruido: con metodo "texto", extraer solo esta seccion (p. ej.
+    # "main") para que el snapshot no arrastre menus y navegacion.
+    selector_seccion: str = ""
 
 
 def load_countries(ruta: Path = RUTA_CONFIG_DEFECTO) -> dict[str, CountryConfig]:
@@ -51,6 +57,39 @@ def load_countries(ruta: Path = RUTA_CONFIG_DEFECTO) -> dict[str, CountryConfig]
         codigo: _a_country_config(codigo, datos_pais, ruta)
         for codigo, datos_pais in paises_crudos.items()
     }
+
+
+@dataclass(frozen=True)
+class AlertasConfig:
+    """D10: parametros de mensajeria de la seccion [alertas] del TOML."""
+
+    cooldown_horas: int = 24  # no re-alertar mismo pais+tipo antes de esto
+    max_embeds_corrida: int = 3  # tope anti-saturacion por corrida
+
+
+CLAVES_ALERTAS = {"cooldown_horas", "max_embeds_corrida"}
+
+
+def load_alertas_config(ruta: Path = RUTA_CONFIG_DEFECTO) -> AlertasConfig:
+    """Lee [alertas] del TOML; seccion ausente = defaults de comunidad."""
+    if not ruta.exists():
+        raise ConfigError(f"No existe el archivo de configuracion: {ruta}")
+    datos = tomllib.loads(ruta.read_text(encoding="utf-8"))
+    seccion = datos.get("alertas", {})
+    if not isinstance(seccion, dict):
+        raise ConfigError(f"[alertas] de {ruta} debe ser una tabla")
+    desconocidas = set(seccion) - CLAVES_ALERTAS
+    if desconocidas:
+        raise ConfigError(
+            f"[alertas] de {ruta} tiene claves desconocidas: {sorted(desconocidas)}"
+        )
+    valores = {}
+    for clave in sorted(CLAVES_ALERTAS & set(seccion)):
+        valor = seccion[clave]
+        if not isinstance(valor, int) or isinstance(valor, bool) or valor < 0:
+            raise ConfigError(f"[alertas].{clave} de {ruta} debe ser un entero >= 0")
+        valores[clave] = valor
+    return AlertasConfig(**valores)
 
 
 def _a_country_config(codigo: str, datos: dict, ruta: Path) -> CountryConfig:
@@ -88,4 +127,6 @@ def _a_country_config(codigo: str, datos: dict, ruta: Path) -> CountryConfig:
         url_respaldo=str(datos.get("url_respaldo", "")),
         ancla=str(datos.get("ancla", "")),
         selector=str(datos.get("selector", "")),
+        contexto=str(datos.get("contexto", "")),
+        selector_seccion=str(datos.get("selector_seccion", "")),
     )
