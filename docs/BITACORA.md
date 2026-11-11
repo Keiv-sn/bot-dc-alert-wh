@@ -164,5 +164,25 @@
 
 **Pendiente:** prueba manual con los 2 webhooks de Kevin (apertura con evidencia al canal público + fuente_inaccesible al canal admin).
 
+------------------------------------------------------------
+
+## 2026-11-11 | ETAPA 6 — Workflow de GitHub Actions
+
+**Agente:** opencode GLM-5.3-Flash-Free (build, sesión continua)
+
+**Qué se hizo:**
+- `.github/workflows/check.yml`: cron `0 */4 * * *` UTC + `workflow_dispatch` (botón manual para pruebas) + `timeout-minutes: 40` + `concurrency` con encolado (las corridas nunca se pisan sobre state.json)
+- Permisos mínimos: solo `contents: write` para el auto-commit
+- Pipeline del job: checkout → Python 3.12 (setup-python + cache pip) → deps (httpx, bs4, playwright, tzdata, pytest, ruff) → Chromium `--with-deps` → **gate de tests+ruff** (el bot no corre si la lógica no está verde) → corrida bajo **xvfb** (el Chromium headful necesita display virtual en runners sin X) → auto-commit de `data/state.json` solo si la corrida fue exitosa
+- Secretos `DISCORD_WEBHOOK_URL` (público) y `DISCORD_WEBHOOK_ADMIN_URL` (staff) inyectados como env — sin ellos el bot corre y registra alertas en el log
+- YAML validado sintácticamente (PyYAML; nota: `on` se lee como booleano en YAML 1.1 — quirk del parser local, GitHub lo interpreta bien)
+
+**Riesgos documentados para la primera corrida en Actions (Nivel 2 del PLAN §4):**
+- Incapsula de NZ y el TLS de .go.jp contra IPs de datacenter de Azure: comportamiento desconocido — el colector navegador ya implementado es la vía; si falla, iterar (stealth args/UA por config)
+- xvfb-run con Chromium headful: patrón estándar en Actions, sin verificar en vivo aún
+- Los cron de Actions pueden retrasarse en horas pico (comportamiento normal de GitHub)
+
+**Estado al cierre:** Etapa 6 código listo 🟡 — falta: (1) Kevin crea los 2 secretos; (2) 1ª corrida real en Actions (botón manual o schedule) y registro de su resultado. Suite 91 tests verde; ruff limpio.
+
 
 

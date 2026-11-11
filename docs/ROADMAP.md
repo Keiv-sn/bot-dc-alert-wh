@@ -95,15 +95,15 @@
 
 ## Etapa 6 — GitHub Actions
 
-**Acciones de Kevin:** subir repo remoto + crear el secreto `DISCORD_WEBHOOK_URL`.
+**Acciones de Kevin:** crear los **2 secretos** en el repo GitHub: `DISCORD_WEBHOOK_URL` (canal público de comunidad) y `DISCORD_WEBHOOK_ADMIN_URL` (canal de staff). Opcional: disparar una corrida manual con el botón "Run workflow" (workflow_dispatch) en la pestaña Actions.
 
-- [ ] `.github/workflows/check.yml`: cron `0 */4 * * *` (UTC → revisar hora chilena) + `workflow_dispatch` (para pruebas manuales) + timeout de la corrida
-- [ ] Permisos mínimos + acción de auto-commit del `data/state.json` (acción recomendada: `stefanzweifel/git-auto-commit-action`)
-- [ ] Configurar Python 3.12 en el workflow (setup-python + cache de pip)
-- [ ] **Prueba Nivel 2 PLAN §4:** correr callback real de los 5 países desde Actions — aquí se confirma si Australia y Japón responden 200 desde datacenter. Registrar el resultado en BITACORA.md
-- [ ] Si Japón (o Australia) queda bloqueado desde Actions: aumentar Nivel 3 (URLs respaldo) en `countries.toml` o pasar a Nivel 4 (`playwright` en el workflow)
+- [x] `.github/workflows/check.yml`: cron `0 */4 * * *` (UTC) + `workflow_dispatch` + `timeout-minutes: 40` + `concurrency` (corridas encoladas, nunca se pisan)
+- [x] Permisos mínimos (`contents: write`) + auto-commit de `data/state.json` (`stefanzweifel/git-auto-commit-action@v5`, solo si la corrida fue exitosa)
+- [x] Configurar Python 3.12 en el workflow (setup-python + cache de pip) + Chromium de Playwright (`--with-deps`) + **xvfb** para el Chromium headful (runners sin display)
+- [ ] **Prueba Nivel 2 PLAN §4:** primera corrida real de los 5 países desde Actions (schedule automático o botón manual) — confirma si AU/CA/NZ/JP responden desde IPs de datacenter. Registrar el resultado en BITACORA.md
+- [ ] Si algún país queda bloqueado desde Actions: ajustar URLs de respaldo (Nivel 3) o afinar el colector navegador (Nivel 4, ya implementado)
 
-✅ **Cierre:** 2 corridas automáticas exitosas en Actions; se confirma por último commit de `data/state.json` en GitHub.
+✅ **Cierre:** 2 corridas automáticas exitosas en Actions; se confirma por el último commit de `data/state.json` en GitHub.
 
 ---
 
@@ -131,6 +131,6 @@
 | 3 — Detección + Estado | ✅ **Completada** (corrida real 5/5 verificada) | 2026-11-10 |
 | 4 — Discord | 🟡 En marcha (falta prueba manual con webhook) | 2026-11-10 |
 | 4b — Mensajería comunidad | 🟡 Código y corrida real listos (falta prueba manual con 2 webhooks) | 2026-11-11 |
-| 5 — Persistencia revisada | ⬜ Pendiente | — |
-| 6 — GitHub Actions | ⬜ Pendiente | — |
+| 5 — Persistencia revisada | 🟡 En marcha (.gitattributes hecho; falta TDD de tolerancia + semilla explícita) | 2026-11-11 |
+| 6 — GitHub Actions | 🟡 Workflow listo (falta 1ª corrida real en Actions + 2 secretos) | 2026-11-11 |
 | 7 — Pruebas y lanzamiento | ⬜ Pendiente | — |

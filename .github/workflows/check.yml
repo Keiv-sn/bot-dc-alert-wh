@@ -1,0 +1,65 @@
+# Monitoreo Working Holiday — corrida automatica cada 4 horas (PLAN D4/D6).
+#
+# Flujo: tests -> corrida del bot -> auto-commit de data/state.json (D3).
+# Los webhooks de Discord SOLO llegan por secretos (D9):
+#   DISCORD_WEBHOOK_URL       -> canal publico de la comunidad
+#   DISCORD_WEBHOOK_ADMIN_URL -> canal de administracion (staff)
+# El Chromium de los paises con acceso "navegador" (CA/NZ/JP) corre headful
+# bajo xvfb porque los runners de Actions no tienen display.
+# Primera corrida en Actions validara el Nivel 2 del PLAN §4 (IPs datacenter):
+# registrar el resultado en docs/BITACORA.md.
+
+name: monitoreo-working-holiday
+
+on:
+  schedule:
+    - cron: "0 */4 * * *" # cada 4 h UTC (00/04/08/12/16/20)
+  workflow_dispatch: # boton manual para pruebas desde la pestaña Actions
+
+permissions:
+  contents: write # solo lo minimo: auto-commit del estado
+
+concurrency:
+  group: monitoreo-working-holiday
+  cancel-in-progress: false # las corridas se encolan, nunca se pisan
+
+jobs:
+  corrida:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40 # el navegador y los challenges no deben colgar el cron
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 3.12 + cache de pip
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install httpx beautifulsoup4 "playwright>=1.49" tzdata pytest ruff
+
+      - name: Instalar Chromium (Playwright)
+        run: python -m playwright install --with-deps chromium
+
+      - name: Tests y linter (el bot no corre si la logica no esta verde)
+        run: |
+          python -m pytest -q
+          python -m ruff check src tests
+
+      - name: Corrida del bot (bajo xvfb por el Chromium headful)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          xvfb-run -a python -m src.main
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_ADMIN_URL: ${{ secrets.DISCORD_WEBHOOK_ADMIN_URL }}
+
+      - name: Auto-commit del estado
+        if: success()
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "corrida automatica: estado de fuentes"
+          file_pattern: data/state.json
