@@ -123,7 +123,8 @@ def reenviar_a_discord() -> None:
         with httpx.Client() as client:
             respuesta = client.post(destino, json=recibido["payload"], timeout=15.0)
         ok = 200 <= respuesta.status_code < 300
-        print(f"\n[{recibido['canal']}] reenviado a ${variable}: {'OK' if ok else f'HTTP {respuesta.status_code}'}")
+        resultado = "OK" if ok else f"HTTP {respuesta.status_code}"
+        print(f"\n[{recibido['canal']}] reenviado a ${variable}: {resultado}")
 
 
 if __name__ == "__main__":
