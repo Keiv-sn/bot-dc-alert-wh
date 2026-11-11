@@ -18,7 +18,7 @@ Bot en Python que monitorea las páginas oficiales de los programas Working Holi
 | D6 | Stack | Python 3.12 · httpx + beautifulsoup4 · pytest · ruff |
 | D7 | Metodología | **TDD** (red → green → refactor) en etapas 2–5 |
 | D8 | Calidad | Principios de código limpio (ver §6) obligatorios |
-| D9 | Canales de Discord (Etapa 4b) | **2 webhooks con ruteo por tipo:** apertura/cierre → canal público de la comunidad; cambio/fuente inaccesible → canal de administración. Los webhooks NUNCA viven en el TOML ni el repo: solo variables de entorno `DISCORD_WEBHOOK_URL` (público) y `DISCORD_WEBHOOK_ADMIN_URL` (staff). Sin webhook admin → esas alertas quedan solo en el log |
+| D9 | Canales de Discord (Etapa 4b) | **2 webhooks con ruteo por tipo:** apertura/cierre → canal público de la comunidad; cambio/fuente inaccesible → canal de administración. Los webhooks NUNCA viven en el TOML ni el repo **ni se comparten por chat con ningún agente** (credencial privada de alto riesgo): Kevin los crea y los configura él mismo como secretos de GitHub (`DISCORD_WEBHOOK_URL` público, `DISCORD_WEBHOOK_ADMIN_URL` staff) o variables de entorno locales. Sin webhook admin → esas alertas quedan solo en el log |
 | D10 | Anti-ruido para comunidad grande (Etapa 4b) | (1) apertura/cierre llevan **evidencia verificable**: cita literal de la fuente + enlace; (2) keywords con `contexto` por país — una noticia no es una convocatoria; (3) cambios menores **nunca** van al canal público; (4) cooldown **24 h** por país+tipo persistido en `state.json`; (5) tope **3 embeds/corrida** con prioridad apertura > cierre > fuente_inaccesible > cambio; (6) `allowed_mentions: {"parse": []}` en todo payload — cero menciones, garantizado |
 
 ## 3. Fuentes oficiales (estado al 2026-11-09)

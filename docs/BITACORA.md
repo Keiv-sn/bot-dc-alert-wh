@@ -184,5 +184,25 @@
 
 **Estado al cierre:** Etapa 6 código listo 🟡 — falta: (1) Kevin crea los 2 secretos; (2) 1ª corrida real en Actions (botón manual o schedule) y registro de su resultado. Suite 91 tests verde; ruff limpio.
 
+------------------------------------------------------------
+
+## 2026-11-11 | SEGURIDAD + Prueba sin credenciales (cierre Etapa 4b)
+
+**Agente:** opencode GLM-5.3-Flash-Free (build, sesión continua)
+
+**Decisión de seguridad (Kevin):** los webhooks son credenciales privadas de alto riesgo → **jamás se comparten por el chat con ningún agente**. Kevin los creó él mismo en Discord y los enlazó como secretos de GitHub. PLAN D9 actualizado para reflejarlo; los agentes validan el flujo SIN conocer las credenciales.
+
+**Qué se hizo:**
+- `tools/simular_discord.py`: simulador de Discord (servidor HTTP local que hace de webhook). Fabrica un estado provocador (JP "cerrado" → APERTURA; CA texto distinto → CAMBIO), corre el bot REAL contra las fuentes oficiales con `DISCORD_WEBHOOK_URL`/`DISCORD_WEBHOOK_ADMIN_URL` apuntando al simulador, captura los payloads y **restaura `data/state.json`** al terminar (no contamina el estado real)
+- Verificación en vivo de la simulación:
+  - `jp:apertura` → canal **público**: título 🟢 "Convocatoria ABIERTA — Japón 🇯🇵", color #57f287, **Evidencia** = cita literal de la embajada ("【Apertura del agendamiento de citas para solicitud】 Desde el 2 de noviembre de 2026..."), "Detectado: 22:24 del 10/11 (hora de Chile)"
+  - `ca:cambio` → canal **admin**: título 🔄, color #fee75c, extracto del texto nuevo
+  - Ambos con `allowed_mentions: {"parse": []}` (cero menciones) y footer "detección automática — verifica en la fuente"
+  - `envios fallidos: 0`; ruteo D9 correcto; 91 tests y ruff siguen en verde
+
+**Qué queda pendiente (Kevin):** disparar la 1ª corrida en Actions (botón "Run workflow" o esperar el cron) — eso valida (a) la entrega REAL a Discord con sus secretos y (b) el Nivel 2 del PLAN §4 (fuentes vs IPs de datacenter). Verificar por el commit "corrida automatica: estado de fuentes" en el historial del repo.
+
+**Estado al cierre:** Etapa 4b ✅ completada (verificada sin credenciales); Etapa 6 🟡 esperando su 1ª corrida en Actions.
+
 
 
