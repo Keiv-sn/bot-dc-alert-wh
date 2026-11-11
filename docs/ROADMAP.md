@@ -100,8 +100,9 @@
 - [x] `.github/workflows/check.yml`: cron `0 */4 * * *` (UTC) + `workflow_dispatch` + `timeout-minutes: 40` + `concurrency` (corridas encoladas, nunca se pisan)
 - [x] Permisos mínimos (`contents: write`) + auto-commit de `data/state.json` (`stefanzweifel/git-auto-commit-action@v5`, solo si la corrida fue exitosa)
 - [x] Configurar Python 3.12 en el workflow (setup-python + cache de pip) + Chromium de Playwright (`--with-deps`) + **xvfb** para el Chromium headful (runners sin display)
-- [ ] **Prueba Nivel 2 PLAN §4:** primera corrida real de los 5 países desde Actions (schedule automático o botón manual) — confirma si AU/CA/NZ/JP responden desde IPs de datacenter. Registrar el resultado en BITACORA.md
-- [ ] Si algún país queda bloqueado desde Actions: ajustar URLs de respaldo (Nivel 3) o afinar el colector navegador (Nivel 4, ya implementado)
+- [x] **Prueba Nivel 2 PLAN §4 — VERIFICADA (1ª corrida, 2026-11-11):** corrida manual disparada por Kevin. Evidencia: auto-commit `0c14b9f corrida automatica: estado de fuentes` con diff SOLO de los 5 `actualizado_en` (01:41 UTC = 22:41 Chile) — sin cambios en `fallas_consecutivas`/`estado`/`texto` ⇒ **los 5 países respondieron desde IPs de datacenter** (CA/NZ/JP vía Chromium headful + xvfb OK) ⇒ sin_cambios en todo ⇒ 0 alertas → 0 mensajes a Discord (correcto: nada que reportar, cero spam). Gate de tests+ruff pasó antes de la corrida
+- [ ] Si algún país queda bloqueado desde Actions: ajustar URLs de respaldo (Nivel 3) o afinar el colector navegador (Nivel 4, ya implementado) — **no necesario por ahora**
+- [ ] **Cierre de etapa (falta):** 2ª corrida automática exitosa del cron (se dispara sola cada 4 h); confirmar por el próximo commit "corrida automatica" en el historial
 
 ✅ **Cierre:** 2 corridas automáticas exitosas en Actions; se confirma por el último commit de `data/state.json` en GitHub.
 
@@ -132,5 +133,5 @@
 | 4 — Discord | 🟡 En marcha (falta prueba manual con webhook) | 2026-11-10 |
 | 4b — Mensajería comunidad | ✅ **Completada** (verificada con simulador local sin credenciales) | 2026-11-11 |
 | 5 — Persistencia revisada | 🟡 En marcha (.gitattributes hecho; falta TDD de tolerancia + semilla explícita) | 2026-11-11 |
-| 6 — GitHub Actions | 🟡 Workflow listo (falta 1ª corrida real en Actions + 2 secretos) | 2026-11-11 |
+| 6 — GitHub Actions | 🟡 1ª corrida real verificada (5/5 países desde datacenter ✅); falta 2ª corrida del cron para cerrar | 2026-11-11 |
 | 7 — Pruebas y lanzamiento | ⬜ Pendiente | — |

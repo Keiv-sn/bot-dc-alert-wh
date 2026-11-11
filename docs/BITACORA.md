@@ -204,5 +204,22 @@
 
 **Estado al cierre:** Etapa 4b ✅ completada (verificada sin credenciales); Etapa 6 🟡 esperando su 1ª corrida en Actions.
 
+------------------------------------------------------------
+
+## 2026-11-11 | PRIMERA CORRIDA EN ACTIONS — VERIFICADA (Kevin la disparó)
+
+**Agente:** opencode GLM-5.3-Flash-Free (build, sesión continua)
+
+**Verificación sin credenciales (solo historial del repo):**
+- Commit `0c14b9f corrida automatica: estado de fuentes` en origin/main ⇒ la corrida pasó TODAS las compuertas: checkout → Python 3.12 → deps → Chromium → **gate de tests+ruff** → bot bajo xvfb → auto-commit (ese step solo corre si todo lo anterior fue exitoso)
+- Diff del commit: SOLO los 5 `actualizado_en` cambiaron (01:41 UTC = 22:41 de Chile). Sin cambios en `fallas_consecutivas`, `estado` ni `texto` ⇒ **conclusión sólida: los 5 países respondieron OK desde IPs de datacenter de GitHub** — incluidos Canadá (Akamai), NZ (Incapsula) y JP (TLS WAF) con Chromium headful bajo xvfb. El "Nivel 2" del PLAN §4 queda CONFIRMADO: nada se bloqueó desde Actions
+- `sin_cambios` en los 5 ⇒ 0 alertas ⇒ 0 mensajes a Discord. Comportamiento correcto y anti-spam: la comunidad no recibió nada porque no había nada que reportar
+
+**Hallazgo corregido en caliente:** un E501 en `tools/simular_discord.py` se coló en el commit anterior — habría roto el gate de ruff de la PRÓXIMA corrida en Actions. Fix inmediato (`b4b1775`). Lección: revisar lint de TODA carpeta (no solo src/tests) antes de push.
+
+**Herramienta nueva:** `--reenviar` en el simulador — Kevin apunta SUS webhooks reales a variables de entorno solo en su PC y ve los embeds reales en su Discord de pruebas, sin compartirlos con nadie.
+
+**Estado al cierre:** Etapa 6 🟡 — 1/2 corridas exitosas; la 2ª la hace el cron solo (máx 4 h). Suite 91 tests + ruff en verde.
+
 
 
