@@ -26,6 +26,11 @@ skills-lock.json
 # --- Assets adjuntos de fixtures (solo el .html sirve para scraping) ---
 tests/fixtures/*_files/
 
+# --- Docs internos (solo viven en disco: plan/roadmap/bitacora) ---
+# Decisión de Kevin 2026-11-14: la documentación interna NO se publica en el
+# repo. Los agentes de IA la siguen leyendo y actualizando localmente.
+docs/
+
 # --- Sistema operativo ---
 Thumbs.db
 .DS_Store

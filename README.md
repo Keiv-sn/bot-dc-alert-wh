@@ -8,14 +8,13 @@ sin necesidad de PC encendida.
 
 ## Documentación del proyecto
 
-| Archivo | Contenido |
-|---------|-----------|
-| [`docs/PLAN.md`](docs/PLAN.md) | Decisiones cerradas, arquitectura, fuentes oficiales, reglas de negocio, principios de código |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Hoja de ruta por etapas con criterios de cierre |
-| [`docs/BITACORA.md`](docs/BITACORA.md) | Bitácora: todo agente registra hitos y hallazgos al final de cada sesión |
+La documentación interna del proyecto (plan, roadmap y bitácora de sesiones)
+**no es pública**: vive solo en el disco de trabajo (`docs/` está excluido del
+repositorio por decisión del autor) y no se sube a GitHub.
 
-> **Para agentes de IA:** leer los 3 documentos antes de escribir código.
-> Respetar las decisiones D1–D10 de `docs/PLAN.md` y registrar la sesión en `docs/BITACORA.md`.
+> **Para agentes de IA (en la máquina del autor):** leer los 3 documentos en
+> `docs/` antes de escribir código, respetar las decisiones D1–D10 y registrar
+> la sesión al final en `docs/BITACORA.md`.
 
 ## Estructura
 
@@ -30,8 +29,7 @@ bot-dc-wh/
 │   └── state.py         # data/state.json
 ├── config/countries.toml
 ├── data/state.json      # estado persistente (commiteado — decisión D3)
-├── tests/fixtures/      # HTML real de las fuentes (truth para tests)
-└── docs/                # plan, roadmap y bitácora
+└── tests/fixtures/      # HTML real de las fuentes (truth para tests)
 ```
 
 ## Uso local
@@ -61,7 +59,7 @@ de la fuente oficial más el enlace directo para verificar.
 
 Si el canal admin no tiene webhook, esas alertas quedan solo en el log de la corrida.
 
-## Principios (resumen — detalle en docs/PLAN.md §6)
+## Principios
 
 Código limpio, funciones pequeñas, type hints, config como datos
 (`countries.toml`), TDD en toda la lógica, linter `ruff` en verde antes de cada commit.
