@@ -7,11 +7,17 @@ import pytest
 from src.config import ConfigError, load_alertas_config, load_countries
 
 CONFIG_REAL = Path("config/countries.toml")
-CODIGOS_ESPERADOS = {"au", "ca", "ie", "nz", "jp"}
+# 13 paises: 5 originales (Etapa 1-4) + 8 agregados el 2026-11-14 con fuentes
+# verificadas en vivo contra la lista oficial del Consulado de Chile
+# (18 acuerdos WH vigentes; fuente madre: consulado.gob.cl/servicios/acuerdos-working-holiday)
+CODIGOS_ESPERADOS = {
+    "au", "ca", "ie", "nz", "jp",  # originales
+    "de", "fr", "kr", "dk", "se", "pt", "is", "ch",  # nuevos (2026-11-14)
+}
 
 
 class TestConfigReal:
-    def test_carga_los_cinco_paises(self) -> None:
+    def test_carga_los_paises_esperados(self) -> None:
         paises = load_countries(CONFIG_REAL)
         assert set(paises) == CODIGOS_ESPERADOS
 
@@ -31,6 +37,9 @@ class TestConfigReal:
         assert paises["ca"].acceso == "navegador"
         assert paises["nz"].acceso == "navegador"
         assert paises["jp"].acceso == "navegador"
+        assert paises["kr"].acceso == "navegador"  # misma familia WAF que .go.jp
+        for codigo in ("de", "fr", "dk", "se", "pt", "is", "ch"):
+            assert paises[codigo].acceso == "http", codigo
 
     def test_acceso_desconocido_da_error_claro(self, tmp_path: Path) -> None:
         config = tmp_path / "countries.toml"
@@ -59,6 +68,20 @@ class TestConfigReal:
         assert paises["ca"].selector_seccion == "main"  # sin menus -> menos CAMBIO
         assert paises["ie"].selector_seccion == "main"
         assert paises["au"].selector_seccion == ""
+        # paginas CMS grandes agregadas el 2026-11-14: solo seccion principal
+        for codigo in ("de", "fr", "is"):
+            assert paises[codigo].selector_seccion == "main", codigo
+
+    def test_francia_seguimiento_de_campana_anual(self) -> None:
+        """La campana VT 2026 esta CERRADA (verificado live): frase literal."""
+        fr = load_countries(CONFIG_REAL)["fr"]
+        assert "actualmente cerradas" in fr.keywords_cerrado
+        assert fr.keywords_abierto == []  # se valida al reabrir la campana
+
+    def test_suecia_suspendido_se_detecta_como_cerrado(self) -> None:
+        """Acuerdo suspendido (consulado.gob.cl): la frase literal es 'suspendido'."""
+        se = load_countries(CONFIG_REAL)["se"]
+        assert "suspendido" in se.keywords_cerrado
 
 
 class TestValidaciones:

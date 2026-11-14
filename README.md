@@ -1,10 +1,11 @@
 # Bot de Alertas Working Holiday Chile 🇨🇱
 
 Bot en Python que monitorea las páginas oficiales de los programas **Working Holiday**
-disponibles para ciudadanos chilenos en cinco países — Australia 🇦🇺, Canadá 🇨🇦,
-Irlanda 🇮🇪, Nueva Zelanda 🇳🇿, Japón 🇯🇵 — y avisa por **Discord** cuando una
-convocatoria abre, cierra o cambia. Corre cada 4 horas en GitHub Actions,
-sin necesidad de PC encendida.
+disponibles para ciudadanos chilenos en trece países — Australia 🇦🇺, Canadá 🇨🇦,
+Irlanda 🇮🇪, Nueva Zelanda 🇳🇿, Japón 🇯🇵, Alemania 🇩🇪, Francia 🇫🇷, Corea del Sur 🇰🇷,
+Dinamarca 🇩🇰, Suecia 🇸🇪, Portugal 🇵🇹, Islandia 🇮🇸 y Suiza 🇨🇭 — y avisa por
+**Discord** cuando una convocatoria abre, cierra o cambia. Corre cada 4 horas en
+GitHub Actions, sin necesidad de PC encendida.
 
 ## Documentación del proyecto
 

@@ -73,3 +73,97 @@ acceso = "navegador"  # WAF por huella TLS en .go.jp (Etapa 3)
 metodo = "texto"
 keywords_abierto = ["apertura del agendamiento", "convocatoria abierta"]
 keywords_cerrado = []
+
+# ---- Paises agregados 2026-11-14 (fuentes verificadas en vivo) ----
+# Fuente madre de la vigencia de acuerdos: consulado.gob.cl/servicios/acuerdos-working-holiday
+
+[paises.de]
+nombre = "Alemania 🇩🇪"
+url = "https://santiago.diplo.de/cl-es/service/05-visaeinreise/1210626-1210626"
+acceso = "http"  # diplo.de responde 200 a httpx (verificado live 2026-11-14)
+metodo = "texto"
+selector_seccion = "main"
+# Programa de citas todo el ano: sin estado abierto/cerrado. El valor esta en
+# los CAMBIOS (arancel 75 euros, financiamiento 1.326 euros, requisitos).
+keywords_abierto = []
+keywords_cerrado = []
+
+[paises.fr]
+nombre = "Francia 🇫🇷"
+url = "https://cl.diplomatie.gouv.fr/es/node/19/campana-visa-vacaciones-y-trabajo-2026"
+acceso = "http"  # 200 a httpx (verificado live 2026-11-14)
+metodo = "texto"
+selector_seccion = "main"
+# Campana ANUAL con cupo 400: pagina de campaña que declara su estado.
+# 2026-11-14: "Las postulaciones para la convocatoria 2026 se encuentran
+# actualmente cerradas." Al reabrir (2027), se valida la keyword de apertura
+# contra el texto real y se agrega a keywords_abierto.
+keywords_abierto = []
+keywords_cerrado = ["actualmente cerradas"]
+
+[paises.kr]
+nombre = "Corea del Sur 🇰🇷"
+url = "https://overseas.mofa.go.kr/cl-es/index.do"
+acceso = "navegador"  # familia .go.kr (misma infraestructura WAF que .go.jp)
+metodo = "texto"
+# Portal de la embajada en español: los avisos del programa WH aparecen en la
+# portada (como los Avisos de Cierre). Monitoreo por CAMBIO de la portada;
+# refinar keywords cuando aparezca el primer anuncio real de convocatoria.
+keywords_abierto = []
+keywords_cerrado = []
+
+[paises.dk]
+nombre = "Dinamarca 🇩🇰"
+url = "https://nyidanmark.dk/en-GB/Applying/Working-Holiday/Working-Holiday-Chile-application"
+url_respaldo = "http://chile.um.dk/es/servicios-consulares/visa-y-permiso-de-residencia/working-holiday/"
+acceso = "http"  # 200 a httpx (verificado live 2026-11-14; um.dk estaba 520 temporal)
+metodo = "texto"
+# SIRI: cuota anual de 150 (2 periodos: marzo-agosto / septiembre-febrero),
+# por orden de llegada. La pagina estable no declara estado actual; el
+# seguimiento es por CAMBIO (y la apertura se anuncia en Noticias de SIRI).
+keywords_abierto = []
+keywords_cerrado = []
+
+[paises.se]
+nombre = "Suecia 🇸🇪"
+url = "https://www.consulado.gob.cl/workingholiday/suecia"
+acceso = "http"  # gob.cl responde 200 a httpx (verificado live 2026-11-14)
+metodo = "texto"
+# ACUERDO TEMPORALMENTE SUSPENDIDO segun la fuente oficial chilena
+# ("Este acuerdo se encuentra temporalmente suspendido."). Cuando cese la
+# suspension, la frase desaparece -> CAMBIO -> refinar keywords de apertura.
+keywords_abierto = []
+keywords_cerrado = ["suspendido"]
+
+[paises.pt]
+nombre = "Portugal 🇵🇹"
+url = "https://www.consulado.gob.cl/workingholiday/portugal"
+acceso = "http"  # gob.cl responde 200 a httpx (verificado live 2026-11-14)
+metodo = "texto"
+# Acuerdo vigente; la postulacion es presencial en la embajada de Portugal en
+# Santiago (sin web oficial de estado). Monitoreo por CAMBIO de la pagina
+# oficial chilena del programa.
+keywords_abierto = []
+keywords_cerrado = []
+
+[paises.is]
+nombre = "Islandia 🇮🇸"
+url = "https://island.is/en/permit-for-working-holiday"
+acceso = "http"  # 200 a httpx (verificado live 2026-11-14)
+metodo = "texto"
+selector_seccion = "main"
+# Permiso de residencia WH/Youth Mobility (Chile incluido en el acuerdo;
+# arancel 40.000 ISK). Postulacion todo el ano por correo: seguimiento por CAMBIO.
+keywords_abierto = []
+keywords_cerrado = []
+
+[paises.ch]
+nombre = "Suiza 🇨🇭"
+url = "https://www.consulado.gob.cl/workingholiday/suiza"
+acceso = "http"  # gob.cl responde 200 a httpx (verificado live 2026-11-14)
+metodo = "texto"
+# ATENCION: NO es Working Holiday clasico — es "Intercambio de pasantes"
+# (pasantia de hasta 18 meses, 18-35 anos, requiere titulo profesional).
+# Postulacion por cita (santiago.visas@eda.admin.ch). Monitoreo por CAMBIO.
+keywords_abierto = []
+keywords_cerrado = []
