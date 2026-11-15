@@ -4,7 +4,7 @@
 # Los webhooks de Discord SOLO llegan por secretos (D9):
 #   DISCORD_WEBHOOK_URL       -> canal publico de la comunidad
 #   DISCORD_WEBHOOK_ADMIN_URL -> canal de administracion (staff)
-# El Chromium de los paises con acceso "navegador" (CA/NZ/JP) corre headful
+# El Chromium de los paises con acceso "navegador" (CA/NZ/JP/KR) corre headful
 # bajo xvfb porque los runners de Actions no tienen display.
 # Primera corrida en Actions validara el Nivel 2 del PLAN §4 (IPs datacenter):
 # registrar el resultado en docs/BITACORA.md.
@@ -29,10 +29,10 @@ jobs:
     timeout-minutes: 40 # el navegador y los challenges no deben colgar el cron
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Python 3.12 + cache de pip
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -59,7 +59,7 @@ jobs:
 
       - name: Auto-commit del estado
         if: success()
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "corrida automatica: estado de fuentes"
           file_pattern: data/state.json

@@ -73,15 +73,42 @@ class TestConfigReal:
             assert paises[codigo].selector_seccion == "main", codigo
 
     def test_francia_seguimiento_de_campana_anual(self) -> None:
-        """La campana VT 2026 esta CERRADA (verificado live): frase literal."""
+        """La campana VT 2026 esta CERRADA (verificado live): frase literal FR.
+
+        Se monitorea la version FR porque es la maestra (actualizada 22-oct-2026
+        frente a la traduccion ES del 24-jun-2026).
+        """
         fr = load_countries(CONFIG_REAL)["fr"]
-        assert "actualmente cerradas" in fr.keywords_cerrado
+        assert "actuellement fermées" in fr.keywords_cerrado
         assert fr.keywords_abierto == []  # se valida al reabrir la campana
 
     def test_suecia_suspendido_se_detecta_como_cerrado(self) -> None:
         """Acuerdo suspendido (consulado.gob.cl): la frase literal es 'suspendido'."""
         se = load_countries(CONFIG_REAL)["se"]
         assert "suspendido" in se.keywords_cerrado
+
+    def test_korea_usa_tablero_oficial_wh(self) -> None:
+        """Tablero WH de la embajada (sin reloj ni carruseles de la portada).
+
+        2026-11-04: '1ra Convocatoria Working Holiday 2027 (CUPOS AGOTADOS)'
+        — la cuota de la 1ra ronda 2027 ya se agoto; la frase es literal.
+        """
+        kr = load_countries(CONFIG_REAL)["kr"]
+        assert "brd/m_22556/list.do" in kr.url
+        assert "cupos agotados" in kr.keywords_cerrado
+
+    def test_portugal_monitorea_la_embajada_autoritativa(self) -> None:
+        """Fuente: embajada de Portugal en Chile (quien otorga la visa);
+        la pagina del Consulado chileno queda de respaldo."""
+        pt = load_countries(CONFIG_REAL)["pt"]
+        assert "embaixadaportugal.mne.gov.pt" in pt.url
+        assert "consulado.gob.cl" in pt.url_respaldo
+
+    def test_islandia_mantiene_pagina_del_permiso(self) -> None:
+        """La pagina de 'waiting time' es JavaScript puro (sin datos en el
+        HTML estatico): no sirve como fuente. El permiso es la fuente."""
+        is_page = load_countries(CONFIG_REAL)["is"]
+        assert "permit-for-working-holiday" in is_page.url
 
 
 class TestValidaciones:

@@ -90,27 +90,32 @@ keywords_cerrado = []
 
 [paises.fr]
 nombre = "Francia 🇫🇷"
-url = "https://cl.diplomatie.gouv.fr/es/node/19/campana-visa-vacaciones-y-trabajo-2026"
-acceso = "http"  # 200 a httpx (verificado live 2026-11-14)
+url = "https://cl.diplomatie.gouv.fr/fr/aller-en-france/campagne-visa-vacances-travail-2026"
+acceso = "http"  # 200 a httpx (verificado live 2026-11-15)
 metodo = "texto"
 selector_seccion = "main"
-# Campana ANUAL con cupo 400: pagina de campaña que declara su estado.
-# 2026-11-14: "Las postulaciones para la convocatoria 2026 se encuentran
-# actualmente cerradas." Al reabrir (2027), se valida la keyword de apertura
-# contra el texto real y se agrega a keywords_abierto.
+# Campana ANUAL con cupo 400: pagina de campana que declara su estado.
+# Se monitorea la version FR (la maestra): "Mis a jour le 22 octobre 2026"
+# vs la ES "Actualizado el 24 de June de 2026" (traduccion rezagada).
+# 2026-11-15: "Les candidatures pour la campagne 2026 sont actuellement
+# fermees." Al reabrir (2027), se valida la keyword de apertura contra el
+# texto real y se agrega a keywords_abierto.
 keywords_abierto = []
-keywords_cerrado = ["actualmente cerradas"]
+keywords_cerrado = ["actuellement fermées"]
 
 [paises.kr]
 nombre = "Corea del Sur 🇰🇷"
-url = "https://overseas.mofa.go.kr/cl-es/index.do"
+url = "https://overseas.mofa.go.kr/cl-es/brd/m_22556/list.do"
 acceso = "navegador"  # familia .go.kr (misma infraestructura WAF que .go.jp)
 metodo = "texto"
-# Portal de la embajada en español: los avisos del programa WH aparecen en la
-# portada (como los Avisos de Cierre). Monitoreo por CAMBIO de la portada;
-# refinar keywords cuando aparezca el primer anuncio real de convocatoria.
+# Tablero oficial "Asuntos Consulares/Visado > Working Holiday" de la
+# embajada (elegido sobre la portada: esta tenia reloj en vivo, carruseles
+# e Instagram que disparaban CAMBIO sin senal). El tablero cambio
+# 2026-11-04: "1ra Convocatoria Working Holiday 2027" con
+# "(CUPOS AGOTADOS)". keyword de apertura se validara cuando haya
+# convocatoria nueva sin el prefijo de agotado.
 keywords_abierto = []
-keywords_cerrado = []
+keywords_cerrado = ["cupos agotados"]
 
 [paises.dk]
 nombre = "Dinamarca 🇩🇰"
@@ -137,12 +142,15 @@ keywords_cerrado = ["suspendido"]
 
 [paises.pt]
 nombre = "Portugal 🇵🇹"
-url = "https://www.consulado.gob.cl/workingholiday/portugal"
-acceso = "http"  # gob.cl responde 200 a httpx (verificado live 2026-11-14)
+url = "https://santiago.embaixadaportugal.mne.gov.pt/es/la-embajada/noticias/visa-working-holiday-portugal"
+url_respaldo = "https://www.consulado.gob.cl/workingholiday/portugal"
+acceso = "http"  # 200 a httpx (verificado live 2026-11-15)
 metodo = "texto"
-# Acuerdo vigente; la postulacion es presencial en la embajada de Portugal en
-# Santiago (sin web oficial de estado). Monitoreo por CAMBIO de la pagina
-# oficial chilena del programa.
+selector_seccion = "main"
+# Fuente AUTORITATIVA: la embajada de Portugal en Chile (el pais que otorga
+# la visa) publica aqui la informacion del programa (nota 2017: "el numero
+# de visas es ilimitado"). Cambios/nuevas notas = senal real. La pagina del
+# Consulado chileno queda de respaldo.
 keywords_abierto = []
 keywords_cerrado = []
 
