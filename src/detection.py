@@ -77,7 +77,10 @@ def decidir(pais: CountryConfig, snapshot: Snapshot | None, texto: str) -> Decis
         # ninguna corrida real se concretó aún (R1): guardar sin notificar
         return Decision("siembra", estado_nuevo, "primera corrida real del pais")
     if texto.strip() == snapshot.texto.strip():
-        return Decision("sin_cambios", snapshot.estado)
+        # texto identico: sin alerta, pero el estado se RECLASIFICA con las
+        # keywords vigentes — un refinamiento del config se refleja en el
+        # digest sin esperar que la fuente cambie (caso dk, 2026-11-16).
+        return Decision("sin_cambios", estado_nuevo)
     if estado_nuevo == "abierto" and snapshot.estado != "abierto":
         return Decision("apertura", "abierto", f"antes: {snapshot.estado}")
     if estado_nuevo == "cerrado" and snapshot.estado != "cerrado":

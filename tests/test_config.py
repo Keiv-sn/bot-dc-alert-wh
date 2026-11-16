@@ -110,6 +110,18 @@ class TestConfigReal:
         is_page = load_countries(CONFIG_REAL)["is"]
         assert "permit-for-working-holiday" in is_page.url
 
+    def test_dinamarca_cupo_anual_se_detecta_abierto(self) -> None:
+        """Cuota SIRI 150/anual (2 periodos, orden de llegada). La propia
+        pagina trae 'Relevant news': 2026-11-16 dice 'The Working Holiday
+        quotas for citizens of Chile and Argentina have opened' (01-09-2026)
+        -> cuota ABIERTA. Sin keywords_cerrado: 'when the quota is full' es
+        frase estatica de la guia (crearia un falso cerrado)."""
+        dk = load_countries(CONFIG_REAL)["dk"]
+        assert "have opened" in dk.keywords_abierto
+        assert dk.keywords_cerrado == []
+        assert dk.contexto == "chile"  # keyword y 'Chile' coocurren en el news
+        assert dk.selector_seccion == "main"  # <main> contiene el news
+
 
 class TestValidaciones:
     def test_archivo_inexistente_da_error_claro(self, tmp_path: Path) -> None:

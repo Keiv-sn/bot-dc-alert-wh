@@ -54,6 +54,13 @@ url = "https://www.ireland.ie/en/chile/santiago/services/visas/chile-working-hol
 metodo = "texto"
 selector_seccion = "main"  # D10: sin menus, menos falsos CAMBIO
 contexto = "chile"  # D10: noticias de otros programas no disparan apertura
+# Esquema anual: 200 cupos (2 rondas de 100), 18-30 anos, postulacion por
+# UN e-mail a irishwhchile@vfsglobal.com en las fechas anunciadas.
+# Reverificado 2026-11-16 (Kevin): las fechas se anuncian por Instagram
+# (@irlembchile) y en la seccion de noticias de la embajada — verificada
+# hoy: vacia en HTML estatico (JavaScript), no monitoreable. Las keywords
+# anticipan la frase de ronda abierta; se validan contra el texto real
+# cuando aparezca (patron fr/kr).
 keywords_abierto = ["are now open", "round is open"]
 keywords_cerrado = []
 
@@ -86,6 +93,8 @@ metodo = "texto"
 selector_seccion = "main"
 # Programa de citas todo el ano: sin estado abierto/cerrado. El valor esta en
 # los CAMBIOS (arancel 75 euros, financiamiento 1.326 euros, requisitos).
+# Reverificado 2026-11-16 (Kevin): misma pagina, sin senal de estado; queda
+# desconocido-solo-cambio por diseño.
 keywords_abierto = []
 keywords_cerrado = []
 
@@ -122,13 +131,21 @@ keywords_cerrado = ["cupos agotados"]
 nombre = "Dinamarca 🇩🇰"
 url = "https://nyidanmark.dk/en-GB/Applying/Working-Holiday/Working-Holiday-Chile-application"
 url_respaldo = "http://chile.um.dk/es/servicios-consulares/visa-y-permiso-de-residencia/working-holiday/"
-acceso = "http"  # 200 a httpx (verificado live 2026-11-14; um.dk estaba 520 temporal)
+acceso = "http"  # 200 a httpx (verificado live 2026-11-16; el 15 Kevin la vio caida en su navegador, pero el bot la lee bien)
 metodo = "texto"
-# SIRI: cuota anual de 150 (2 periodos: marzo-agosto / septiembre-febrero),
-# por orden de llegada. La pagina estable no declara estado actual; el
-# seguimiento es por CAMBIO (y la apertura se anuncia en Noticias de SIRI).
-keywords_abierto = []
+selector_seccion = "main"  # <main> existe (17.9k de 18.4k chars) y CONTIENE el news
+# SIRI: cuota anual de 150 (2 periodos: marzo-agosto 75 / septiembre-febrero
+# hasta 150), por orden de llegada. La propia pagina trae "Relevant news":
+# 2026-11-16: "The Working Holiday quotas for citizens of Chile and Argentina
+# have opened" (01-09-2026) -> CUOTA ABIERTA (2do periodo). keyword "have
+# opened" con contexto "chile" (coocurren en el titulo del news, verificado).
+# Riesgo conocido (mismo patron que Corea): el news persiste aunque el cupo se
+# llene; el cierre publicara otro news -> CAMBIO -> refinar keywords_cerrado
+# contra el texto real. NO usar "when the quota is full": es frase estatica de
+# la guia de la pagina (crearia un falso cerrado).
+keywords_abierto = ["have opened"]
 keywords_cerrado = []
+contexto = "chile"
 
 [paises.se]
 nombre = "Suecia 🇸🇪"
@@ -174,5 +191,7 @@ metodo = "texto"
 # ATENCION: NO es Working Holiday clasico — es "Intercambio de pasantes"
 # (pasantia de hasta 18 meses, 18-35 anos, requiere titulo profesional).
 # Postulacion por cita (santiago.visas@eda.admin.ch). Monitoreo por CAMBIO.
+# Reverificado 2026-11-16 (Kevin): la pagina de cuotas del SEM no aplica a
+# Working Holiday; queda desconocido-solo-cambio por diseño.
 keywords_abierto = []
 keywords_cerrado = []

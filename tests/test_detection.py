@@ -54,6 +54,18 @@ class TestDecidir:
         assert decision.tipo == "sin_cambios"
         assert decision.estado == "abierto"
 
+    def test_texto_igual_reclasifica_con_keywords_vigentes(self) -> None:
+        """El estado sigue la clasificacion VIGENTE aunque el texto no cambie.
+
+        Asi un refinamiento de keywords del config se refleja en el digest sin
+        esperar que la fuente cambie (caso dk, 2026-11-16: keyword de apertura
+        agregada con la pagina estable). Sin alerta: sin_cambios no notifica.
+        """
+        snapshot = Snapshot(estado="desconocido", texto="open")
+        decision = decidir(pais(abierto=["open"]), snapshot, "open")
+        assert decision.tipo == "sin_cambios"
+        assert decision.estado == "abierto"
+
     def test_cerrado_a_abierto_es_apertura(self) -> None:
         decision = decidir(
             pais(abierto=["open"], cerrado=["closed"]), self.SNAPSHOT_CERRADO, "open",
