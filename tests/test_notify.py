@@ -2,20 +2,27 @@
 
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import httpx
 import pytest
 
-from src.config import CountryConfig
-from src.notify import construir_mensaje, enviar, hora_chile
+from src.config import CountryConfig, load_countries
+from src.notify import (
+    construir_digest,
+    construir_mensaje,
+    digest_pendiente,
+    enviar,
+    hora_chile,
+)
+from src.state import Snapshot
+
+CONFIG_REAL = Path("config/countries.toml")
 
 
-def pais() -> CountryConfig:
+def pais(codigo: str = "au", nombre: str = "Australia 🇦🇺") -> CountryConfig:
     return CountryConfig(
-        codigo="au",
-        nombre="Australia 🇦🇺",
-        url="https://fuente/oficial",
-        metodo="texto",
+        codigo=codigo, nombre=nombre, url="https://fuente/oficial", metodo="texto",
     )
 
 
@@ -116,3 +123,70 @@ class TestEnviar:
 
         with httpx.Client(transport=httpx.MockTransport(handler)) as client:
             assert enviar(self.WEBHOOK, {"embeds": []}, client) is False
+
+
+class TestDigestPendiente:
+    """Opcion C: ciclo de digest_horas desde el ultimo digest (patron D10)."""
+
+    AHORA = "2026-11-15T12:00:00+00:00"
+
+    def test_nunca_enviado_toca_enviar(self) -> None:
+        assert digest_pendiente("", self.AHORA, 24) is True
+
+    def test_enviado_hace_23_horas_no_toca(self) -> None:
+        anterior = "2026-11-14T13:00:00+00:00"
+        assert digest_pendiente(anterior, self.AHORA, 24) is False
+
+    def test_enviado_hace_25_horas_toca(self) -> None:
+        anterior = "2026-11-14T11:00:00+00:00"
+        assert digest_pendiente(anterior, self.AHORA, 24) is True
+
+    def test_justo_al_cumplir_las_horas_toca(self) -> None:
+        anterior = "2026-11-14T12:00:00+00:00"
+        assert digest_pendiente(anterior, self.AHORA, 24) is True
+
+    def test_iso_previo_ilegible_falla_abierto(self) -> None:
+        # mejor un digest de mas que perder el ciclo por un dato roto
+        assert digest_pendiente("basura", self.AHORA, 24) is True
+
+
+class TestConstruirDigest:
+    """Embed del digest: reutiliza el renderizador compartido de src/estado."""
+
+    AHORA = datetime(2026, 11, 15, 12, 0, tzinfo=UTC)
+
+    def test_una_linea_por_pais_con_el_renderizador_compartido(self) -> None:
+        paises = {"au": pais(), "fr": pais("fr", "Francia 🇫🇷")}
+        estado = {
+            "au": Snapshot(
+                estado="abierto", texto="Open",
+                actualizado_en="2026-11-15T11:00:00+00:00",
+            ),
+        }
+
+        embed = construir_digest(paises, estado, ahora=self.AHORA)["embeds"][0]
+        lineas = embed["description"].splitlines()
+
+        assert len(lineas) == 2
+        assert "🟢 ABIERTO" in lineas[0]
+        assert "⚪ SIN DATOS" in lineas[1]
+
+    def test_sin_menciones_y_con_footer_del_bot(self) -> None:
+        payload = construir_digest({"au": pais()}, {})
+        assert payload["allowed_mentions"] == {"parse": []}
+        assert "detección automática" in payload["embeds"][0]["footer"]["text"]
+
+    def test_titulo_declara_la_cantidad_de_programas(self) -> None:
+        paises = {"au": pais(), "fr": pais("fr", "F"), "de": pais("de", "D")}
+        embed = construir_digest(paises, {})["embeds"][0]
+        assert "3" in embed["title"]
+
+    def test_config_real_cabe_en_la_descripcion_de_discord(self) -> None:
+        # limite de description en embeds: 4096 caracteres
+        paises = load_countries(CONFIG_REAL)
+        embed = construir_digest(paises, {})["embeds"][0]
+        assert len(embed["description"]) <= 4096
+
+    def test_timestamp_incluido(self) -> None:
+        embed = construir_digest({"au": pais()}, {}, ahora=self.AHORA)["embeds"][0]
+        assert embed["timestamp"] == self.AHORA.isoformat()

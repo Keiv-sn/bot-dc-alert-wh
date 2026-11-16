@@ -12,6 +12,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 RUTA_DEFECTO = Path("data/state.json")
+# Formato v2 del archivo: {"paises": {codigo: snapshot}, "digest_enviado_en": ISO}.
+# El formato viejo (dict plano {codigo: snapshot}) sigue cargando tolerante.
+CLAVE_PAISES = "paises"
+CLAVE_DIGEST = "digest_enviado_en"
 
 
 @dataclass(frozen=True)
@@ -28,18 +32,57 @@ class Snapshot:
 
 
 def cargar(ruta: Path = RUTA_DEFECTO) -> dict[str, Snapshot]:
+    """Snapshots por pais; formato viejo (plano) sigue siendo legible."""
+    paises, _ = _leer(ruta)
+    return paises
+
+
+def cargar_digest(ruta: Path = RUTA_DEFECTO) -> str:
+    """ISO UTC del ultimo digest enviado (opcion C); "" si nunca hubo."""
+    _, digest = _leer(ruta)
+    return digest
+
+
+def _leer(ruta: Path) -> tuple[dict[str, Snapshot], str]:
     if not ruta.exists():
-        return {}
+        return {}, ""
     try:
         datos = json.loads(ruta.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
-        return {}
-    return {codigo: Snapshot(**crudo) for codigo, crudo in datos.items()}
+        return {}, ""
+    if not isinstance(datos, dict):
+        return {}, ""
+    if CLAVE_PAISES in datos:  # formato v2
+        crudos = datos.get(CLAVE_PAISES)
+        digest = str(datos.get(CLAVE_DIGEST, "") or "")
+    else:  # formato viejo: {codigo: snapshot} plano
+        crudos = datos
+        digest = ""
+    if not isinstance(crudos, dict):
+        return {}, ""
+    paises: dict[str, Snapshot] = {}
+    for codigo, crudo in crudos.items():
+        try:
+            paises[codigo] = Snapshot(**crudo)
+        except (TypeError, ValueError):
+            continue  # snapshot con claves raras se descarta (carga tolerante)
+    return paises, digest
 
 
-def guardar(estado: dict[str, Snapshot], ruta: Path = RUTA_DEFECTO) -> None:
+def guardar(
+    estado: dict[str, Snapshot],
+    ruta: Path = RUTA_DEFECTO,
+    digest_enviado_en: str = "",
+) -> None:
+    """Escribe formato v2: snapshots por pais + ciclo del digest."""
     ruta.write_text(
-        json.dumps({codigo: asdict(snapshot) for codigo, snapshot in estado.items()},
-                   ensure_ascii=False, indent=2),
+        json.dumps(
+            {
+                CLAVE_PAISES: {codigo: asdict(s) for codigo, s in estado.items()},
+                CLAVE_DIGEST: digest_enviado_en,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )

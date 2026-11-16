@@ -6,10 +6,12 @@ en el log (docs/PLAN.md §8 y el exit 0 garantizado del orquestador).
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from src.config import CountryConfig
+from src.estado import linea_pais
+from src.state import Snapshot
 
 SANTIAGO = ZoneInfo("America/Santiago")
 TIMEOUT_WEBHOOK = 15.0
@@ -48,6 +50,53 @@ TEXTOS = {
     ),
 }
 FOOTER = "WH Alerts Chile · detección automática — verifica en la fuente"
+COLOR_DIGEST = 0x5865F2  # blurple: embed informativo del digest (opcion C)
+
+
+def digest_pendiente(ultimo_digest: str, ahora_iso: str, digest_horas: int) -> bool:
+    """True si toca enviar el digest: nunca enviado o ya pasaron digest_horas.
+
+    Un ISO ilegible falla abierto (True): mejor un digest de mas que perder
+    el ciclo. El apagado (digest_horas = 0) lo decide quien llama.
+    """
+    if not ultimo_digest:
+        return True
+    try:
+        anterior = datetime.fromisoformat(ultimo_digest)
+        presente = datetime.fromisoformat(ahora_iso)
+    except (ValueError, TypeError):
+        return True
+    return (presente - anterior) >= timedelta(hours=digest_horas)
+
+
+def construir_digest(
+    paises: dict[str, CountryConfig],
+    estado: dict[str, Snapshot],
+    ahora: datetime | None = None,
+) -> dict:
+    """Embed con el estado de todos los programas (opcion C).
+
+    Reutiliza el mismo renderizador que el CLI de terminal: una sola fuente
+    de verdad para como se ve el estado. Sin menciones (D10) y dentro del
+    limite de descripcion de Discord (4096 caracteres).
+    """
+    instante = ahora or datetime.now(UTC)
+    lineas = [
+        linea_pais(pais, estado.get(codigo), instante)
+        for codigo, pais in paises.items()
+    ]
+    return {
+        "allowed_mentions": {"parse": []},
+        "embeds": [
+            {
+                "title": f"📊 Estado de los {len(paises)} programas",
+                "description": "\n".join(lineas) or "Sin programas configurados.",
+                "color": COLOR_DIGEST,
+                "timestamp": instante.isoformat(),
+                "footer": {"text": FOOTER},
+            }
+        ],
+    }
 
 
 def construir_mensaje(

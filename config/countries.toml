@@ -27,6 +27,7 @@
 [alertas]
 cooldown_horas = 24        # no re-alertar el mismo pais+tipo antes de esto
 max_embeds_corrida = 3     # tope anti-saturacion por corrida
+digest_horas = 24          # embed de estado a admin cada N horas (0 = apagado)
 
 [paises.au]
 nombre = "Australia 🇦🇺"

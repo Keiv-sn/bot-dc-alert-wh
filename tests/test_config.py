@@ -200,6 +200,18 @@ class TestConfigAlertasD10:
         with pytest.raises(ConfigError, match="cooldown_horas"):
             load_alertas_config(config)
 
+    def test_defaults_incluyen_el_digest_diario(self, tmp_path: Path) -> None:
+        config = tmp_path / "countries.toml"
+        config.write_text(
+            '[paises.au]\nnombre = "A"\nurl = "https://x"\nmetodo = "texto"\n',
+            encoding="utf-8",
+        )
+        alertas = load_alertas_config(config)
+        assert alertas.digest_horas == 24  # digest al canal admin cada 24 h (opcion C)
+
+    def test_config_real_digest_diario_activo(self) -> None:
+        assert load_alertas_config(CONFIG_REAL).digest_horas == 24
+
     def test_config_real_tiene_seccion_alertas(self) -> None:
         alertas = load_alertas_config(CONFIG_REAL)
         assert alertas.cooldown_horas == 24

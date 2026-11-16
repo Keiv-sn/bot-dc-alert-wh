@@ -24,8 +24,8 @@ from src.collectors.browser import fetch_page_navegador
 from src.collectors.scraper import extraer
 from src.config import CountryConfig, load_alertas_config, load_countries
 from src.detection import decidir, decidir_fallo, evidencia
-from src.notify import construir_mensaje, enviar
-from src.state import Snapshot, cargar, guardar
+from src.notify import construir_digest, construir_mensaje, digest_pendiente, enviar
+from src.state import Snapshot, cargar, cargar_digest, guardar
 
 Resultado = str | SourceError
 ALERTABLES = {"apertura", "cierre", "cambio", "fuente_inaccesible"}
@@ -195,11 +195,43 @@ def notificar(
     return fallas
 
 
+def enviar_digest(
+    paises: dict,
+    estado: dict[str, Snapshot],
+    digest_previo: str,
+    digest_horas: int,
+    webhooks: dict[str, str],
+    ahora: datetime.datetime | None = None,
+) -> str:
+    """Digest de estado al canal admin (opcion C): uno cada digest_horas.
+
+    Devuelve el ISO a registrar SOLO si el embed salio: sin webhook o con
+    fallo de red devuelve "" y la proxima corrida reintenta (el ciclo nunca
+    se pierde por una corrida sin canal). digest_horas = 0 lo apaga.
+    """
+    if digest_horas <= 0:
+        return ""
+    instante = ahora or datetime.datetime.now(datetime.UTC)
+    if not digest_pendiente(digest_previo, instante.isoformat(), digest_horas):
+        return ""
+    destino = webhooks.get("admin", "")
+    if not destino:
+        print("  sin canal 'admin': digest queda en log")
+        return ""
+    payload = construir_digest(paises, estado, ahora=instante)
+    with httpx.Client() as client:
+        if enviar(destino, payload, client):
+            return instante.isoformat()
+    print("  fallo el envio del digest de estado")
+    return ""
+
+
 def main() -> int:
     """Punto de entrada: SIEMPRE termina con exit 0 para no romper el cron."""
     paises = load_countries()
     alertas_config = load_alertas_config()
     estado_previo = cargar()
+    digest_previo = cargar_digest()
 
     with httpx.Client() as client:
         resultados = recolectar(paises, client)
@@ -218,6 +250,17 @@ def main() -> int:
         "admin": os.getenv("DISCORD_WEBHOOK_ADMIN_URL", ""),
     }
     fallas_envio = notificar(alertas, paises, estado_nuevo, webhooks)
+    digest_enviado_en = enviar_digest(
+        paises,
+        estado_nuevo,
+        digest_previo,
+        alertas_config.digest_horas,
+        webhooks,
+    )
+    if digest_enviado_en:
+        # el ciclo del digest se sella solo cuando el embed realmente salio
+        guardar(estado_nuevo, digest_enviado_en=digest_enviado_en)
+        print("  digest de estado enviado al canal admin")
     resumen_alertas = "; ".join(
         f"{codigo}:{tipo}" for codigo, tipo in alertas
     ) or "ninguna"

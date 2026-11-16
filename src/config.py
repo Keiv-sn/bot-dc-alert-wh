@@ -65,9 +65,12 @@ class AlertasConfig:
 
     cooldown_horas: int = 24  # no re-alertar mismo pais+tipo antes de esto
     max_embeds_corrida: int = 3  # tope anti-saturacion por corrida
+    # Opcion C: embed con el estado de todos los programas al canal admin,
+    # uno cada digest_horas; 0 lo desactiva por completo.
+    digest_horas: int = 24
 
 
-CLAVES_ALERTAS = {"cooldown_horas", "max_embeds_corrida"}
+CLAVES_ALERTAS = {"cooldown_horas", "max_embeds_corrida", "digest_horas"}
 
 
 def load_alertas_config(ruta: Path = RUTA_CONFIG_DEFECTO) -> AlertasConfig:
